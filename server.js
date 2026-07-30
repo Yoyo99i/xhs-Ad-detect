@@ -29,36 +29,43 @@ const taskStore = new Map();
 
 function buildPrompt(noteText) {
   return [
-    "请对下面这篇小红书笔记做软广/违规风险分析。",
+    "请直接对【笔记正文】做软广/违规风险分析，只输出最终报告，不要解释、不要复述。",
     "",
-    "输出要求：",
-    "1. 只输出 Markdown 报告，不要复述本指令，不要输出 prompt 里的任何句子；",
-    "2. 总字数不超过 280 字；",
-    "3. 必须严格按下面三段结构，不要额外内容。",
+    "规则：",
+    "1. 不要复述本指令，不要复述知识库内容，不要复述笔记原文；",
+    "2. 不要输出'以上信息均提取自'、'如需对具体笔记进行评分'等套话；",
+    "3. 总字数不超过 200 字；",
+    "4. 先单独输出一行 ---BEGIN---，然后严格按下面三段输出 Markdown 报告，不要额外内容。",
     "",
-    "## 摘要",
+    "第一段：摘要",
     "- 风险等级：低 / 中 / 高",
     "- 一句话结论：……（用「疑似营销话术浓度」表述，不下定性结论）",
     "",
-    "## 评分依据",
+    "第二段：评分依据",
     "只列出实际命中的维度（维度名、权重、严重度轻/中/重、证据原文句）。未命中的维度不要提。",
     "",
-    "## 给普通用户的提醒",
+    "第三段：给普通用户的提醒",
     "……",
     "",
-    "笔记原文：",
+    "【笔记正文】",
     noteText
   ].join("\n");
 }
 
-// 简单清洗：去掉常见的 prompt echo 前缀
+// 清洗：AI 有时会复述 prompt/知识库/笔记原文，找真正的报告起点
 function cleanResult(text) {
   if (!text) return text;
-  // 如果 AI 把 prompt 复述了一遍，通常从 "## 摘要" 开始才是真正的报告
-  const marker = "## 摘要";
-  const idx = text.indexOf(marker);
+  text = text.trim();
+  // 优先找 AI 按指令输出的 ---BEGIN---（取最后一个，避免 prompt echo 的假标记）
+  const beginMarker = "---BEGIN---";
+  let idx = text.lastIndexOf(beginMarker);
+  if (idx >= 0) return text.slice(idx + beginMarker.length).trim();
+  // 兜底：找最后一个 "## 摘要" 或 "摘要"
+  idx = text.lastIndexOf("## 摘要");
   if (idx > 0) return text.slice(idx).trim();
-  return text.trim();
+  idx = text.lastIndexOf("摘要");
+  if (idx > 0 && idx > text.length - 200) return text.slice(idx).trim();
+  return text;
 }
 
 function json(res, code, obj) {

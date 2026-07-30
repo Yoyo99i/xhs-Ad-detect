@@ -157,9 +157,11 @@
     // 若 AI 没按该结构输出，则整段放进结论区，避免折叠区空白、结论“消失”。
     function cleanReport(md) {
       md = (md || "").trim();
-      // 如果 AI 把 prompt 也 echo 了，从真正的 "## 摘要" 开始截取
-      const marker = "## 摘要";
-      const idx = md.indexOf(marker);
+      // AI 常把 prompt/知识库/笔记原文复述一遍，找真正的报告起点（取最后一个，避免假标记）
+      const beginMarker = "---BEGIN---";
+      let idx = md.lastIndexOf(beginMarker);
+      if (idx >= 0) return md.slice(idx + beginMarker.length).trim();
+      idx = md.lastIndexOf("## 摘要");
       if (idx > 0) return md.slice(idx).trim();
       return md;
     }
@@ -174,8 +176,9 @@
         resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
+      // 按最后一个 "## 评分依据" 切分（避免 AI echo prompt 里的假标记）
       const marker = "## 评分依据";
-      const idx = md.indexOf(marker);
+      let idx = md.lastIndexOf(marker);
       let summaryMd, detailMd;
       if (idx >= 0) {
         summaryMd = md.slice(0, idx).trim();
