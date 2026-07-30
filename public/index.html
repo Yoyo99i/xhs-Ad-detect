@@ -161,8 +161,9 @@
       const beginMarker = "---BEGIN---";
       let idx = md.lastIndexOf(beginMarker);
       if (idx >= 0) return md.slice(idx + beginMarker.length).trim();
+      // 兼容 AI 没输出 ---BEGIN--- 的情况：取最后一个 "## 摘要"
       idx = md.lastIndexOf("## 摘要");
-      if (idx > 0) return md.slice(idx).trim();
+      if (idx >= 0) return md.slice(idx).trim();
       return md;
     }
 
@@ -176,9 +177,15 @@
         resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
-      // 按最后一个 "## 评分依据" 切分（避免 AI echo prompt 里的假标记）
-      const marker = "## 评分依据";
-      let idx = md.lastIndexOf(marker);
+      // 按最后一个 "## 评分依据" 或 "评分依据" 切分（兼容 AI 漏写 ## 的情况）
+      const re = /(^|\n)\s*#{0,2}\s*评分依据\s*\n/;
+      let idx = -1;
+      let m;
+      let searchFrom = 0;
+      while ((m = md.slice(searchFrom).match(re)) !== null) {
+        idx = searchFrom + m.index + m[1].length;
+        searchFrom = idx + 1;
+      }
       let summaryMd, detailMd;
       if (idx >= 0) {
         summaryMd = md.slice(0, idx).trim();
