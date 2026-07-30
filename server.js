@@ -29,25 +29,36 @@ const taskStore = new Map();
 
 function buildPrompt(noteText) {
   return [
-    "你是一个小红书种草内容审核助手。请检索知识库「Ad_risk_scoring_dimensions」中的广告法禁用词与评分维度，对以下笔记做软广/违规风险分析。",
+    "请对下面这篇小红书笔记做软广/违规风险分析。",
     "",
-    "严格按以下 Markdown 结构输出，总字数不超过 400 字，不要输出结构之外的内容：",
+    "输出要求：",
+    "1. 只输出 Markdown 报告，不要复述本指令，不要输出 prompt 里的任何句子；",
+    "2. 总字数不超过 280 字；",
+    "3. 必须严格按下面三段结构，不要额外内容。",
     "",
     "## 摘要",
     "- 风险等级：低 / 中 / 高",
     "- 一句话结论：……（用「疑似营销话术浓度」表述，不下定性结论）",
     "",
     "## 评分依据",
-    "逐条列出命中的维度（引用知识库维度名与权重）、严重度（轻/中/重）、证据原文句；未命中的维度也简要说明未触发。",
+    "只列出实际命中的维度（维度名、权重、严重度轻/中/重、证据原文句）。未命中的维度不要提。",
     "",
     "## 给普通用户的提醒",
     "……",
     "",
-    "重要约束：不要创建文件、不要执行 SQL、不要调用任何工具、不要建评分系统、不要写代码、不要输出'任务已完成'等总结性语句。你必须直接输出上述 Markdown 结构的完整报告，摘要、评分依据、提醒三段缺一不可。",
-    "",
     "笔记原文：",
     noteText
   ].join("\n");
+}
+
+// 简单清洗：去掉常见的 prompt echo 前缀
+function cleanResult(text) {
+  if (!text) return text;
+  // 如果 AI 把 prompt 复述了一遍，通常从 "## 摘要" 开始才是真正的报告
+  const marker = "## 摘要";
+  const idx = text.indexOf(marker);
+  if (idx > 0) return text.slice(idx).trim();
+  return text.trim();
 }
 
 function json(res, code, obj) {
@@ -153,7 +164,8 @@ async function runAnalyze(taskId, noteText, apiKey) {
     try { reader.cancel(); } catch {}
     try { await poll; } catch {}
 
-    const result = texts.length ? texts.join("\n\n") : null;
+    let result = texts.length ? texts.join("\n\n") : null;
+    result = cleanResult(result);
     const elapsed = Date.now() - startedAt;
     if (!result) {
       store.status = "error"; store.error = "NO_RESULT"; return;
