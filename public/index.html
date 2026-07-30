@@ -122,6 +122,26 @@
     .dim-evi { font-size: 13px; color: #555; margin-top: 7px; }
     .dim-evi mark, .dim-note mark { background: #fff3a3; padding: 0 3px; border-radius: 3px; color: inherit; }
     .dim-note { font-size: 13px; color: #555; margin: 4px 0; }
+    .dim.miss { opacity: .75; }
+    .dim.miss .dim-name { color: #777; font-weight: 500; }
+    .dim.miss .bar-fill { background: #d9d9d9; }
+    .badge.miss { background: #bdbdbd; color: #fff; }
+    .tips-card {
+      background: #fffaf0;
+      border-color: #ffe4c4;
+      margin-top: 0;
+    }
+    .tips-card::before {
+      content: "💡 小贴士";
+      display: block;
+      font-weight: 700;
+      font-size: 15px;
+      color: #e67e00;
+      margin-bottom: 8px;
+    }
+    .tips-card h2 { display: none; }
+    .tips-card p { margin: 0 0 6px; }
+    .tips-card p:last-child { margin-bottom: 0; }
     #disclaimer {
       margin-top: 24px;
       font-size: 12px;
@@ -152,8 +172,9 @@
       <div class="card-label">下方红框即「风险结论 / 一句话判断」；再往下可展开看命中维度明细</div>
       <div class="verdict-note">以下为 AI 对「疑似营销话术」的识别结论，可信度待你自行判断，仅供参考。</div>
       <div id="summary" class="card markdown"></div>
+      <div id="tips" class="card tips-card markdown" style="display:none;"></div>
       <details id="details">
-        <summary>查看评分依据（命中维度明细）</summary>
+        <summary>查看评分依据（7 维全览）</summary>
         <div id="detail-body" class="markdown"></div>
       </details>
     </div>
@@ -169,6 +190,7 @@
     const statusEl = document.getElementById("status");
     const resultEl = document.getElementById("result");
     const summaryEl = document.getElementById("summary");
+    const tipsEl = document.getElementById("tips");
     const detailBody = document.getElementById("detail-body");
     const details = document.getElementById("details");
 
@@ -199,15 +221,39 @@
       }[c]));
     }
 
-    // 严重程度 → 进度条宽度(轻40/中70/重100) + 样式类 + 中文标签
+    // 7 个维度（权重仅用于排序，不在 UI 显示小数）
+    const DIMS = [
+      { name: "商业标识缺失", weight: 0.22 },
+      { name: "利益未披露", weight: 0.18 },
+      { name: "绝对化用语", weight: 0.16 },
+      { name: "隐性营销意图", weight: 0.14 },
+      { name: "功效夸张", weight: 0.12 },
+      { name: "信息可信度", weight: 0.10 },
+      { name: "情绪裹挟", weight: 0.08 }
+    ];
+
+    // 严重程度 → 进度条宽度 + 样式类 + 中文标签
     const LEVEL_MAP = {
-      "轻": { pct: 40, cls: "lv-low", label: "轻度" },
-      "中": { pct: 70, cls: "lv-mid", label: "中度" },
+      "轻": { pct: 35, cls: "lv-low", label: "轻度" },
+      "中": { pct: 65, cls: "lv-mid", label: "中度" },
       "重": { pct: 100, cls: "lv-high", label: "重度" }
     };
 
-    function dimBar(name, level, evidence) {
+    function dimBar(name, level, evidence, isMiss) {
+      if (isMiss) {
+        return (
+          '<div class="dim miss">' +
+            '<div class="dim-top">' +
+              '<span class="dim-name">' + escapeHtml(name) + '</span>' +
+              '<span class="badge miss">未命中</span>' +
+            '</div>' +
+            '<div class="bar"><div class="bar-fill" style="width:0%"></div></div>' +
+          '</div>'
+        );
+      }
       const info = LEVEL_MAP[level] || LEVEL_MAP["中"];
+      // 证据句里把引号内容高亮
+      const eviHtml = escapeHtml(evidence).replace(/["“”](.+?)["“”]/g, '<mark>$1</mark>');
       return (
         '<div class="dim">' +
           '<div class="dim-top">' +
@@ -215,46 +261,58 @@
             '<span class="badge ' + info.cls + '">' + info.label + '</span>' +
           '</div>' +
           '<div class="bar"><div class="bar-fill ' + info.cls + '" style="width:' + info.pct + '%"></div></div>' +
-          '<div class="dim-evi">证据原文：<mark>' + escapeHtml(evidence) + '</mark></div>' +
+          '<div class="dim-evi">证据原文：' + eviHtml + '</div>' +
         '</div>'
       );
     }
 
-    // 逐行解析评分依据；命中维度 → 维度条，普通说明行 → 降级为文字（引号内证据高亮）
-    function renderDimensions(detailMd) {
+    // 解析 AI 返回的命中维度（兼容证据带/不带外层引号的情况）
+    function parseHits(detailMd) {
+      const hits = {};
       const lines = (detailMd || "").split(/\n+/).map(l => l.trim()).filter(Boolean);
-      if (!lines.length) return "";
-      let html = '<div class="dim-list">';
-      let found = 0;
       for (const line of lines) {
-        // 匹配：维度名（程度：轻/中/重）："证据句"
-        const m = line.match(/^(.*?)[\（(]程度[:：]\s*(轻|中|重)[\）)]\s*[:：]?\s*["“”](.+?)["“”]/);
-        if (m) {
-          found++;
-          const name = (m[1].replace(/^[-*•\d+．.、\s]+/, "").trim()) || "未命名维度";
-          html += dimBar(name, m[2], m[3]);
+        const m = line.match(/^(.*?)[\（(]程度[:：]\s*(轻|中|重)[\）)]\s*[:：]?\s*(.*)$/);
+        if (!m) continue;
+        const rawName = m[1].replace(/^[-*•\d+．.、\s]+/, "").trim();
+        const canonical = DIMS.find(d => d.name === rawName || rawName.includes(d.name) || d.name.includes(rawName));
+        const key = canonical ? canonical.name : rawName;
+        hits[key] = { level: m[2], evidence: m[3].trim() };
+      }
+      return hits;
+    }
+
+    // 渲染全部 7 维：命中的按 AI 结果，未命中的灰色显示
+    function renderDimensions(detailMd) {
+      const hits = parseHits(detailMd);
+      let html = '<div class="dim-list">';
+      for (const dim of DIMS) {
+        const hit = hits[dim.name];
+        if (hit) {
+          html += dimBar(dim.name, hit.level, hit.evidence, false);
         } else {
-          const safe = escapeHtml(line).replace(/["“”](.+?)["“”]/g, '<mark>$1</mark>');
-          html += '<p class="dim-note">' + safe + '</p>';
+          html += dimBar(dim.name, null, null, true);
         }
       }
       html += '</div>';
-      return found > 0 ? html : "";
+      return html;
     }
 
     function renderReport(md) {
       md = cleanReport(md);
       if (!md) {
         summaryEl.innerHTML = '<p class="err">未获取到分析内容，请重试或更换笔记后再次检测。</p>';
+        tipsEl.style.display = "none";
+        tipsEl.innerHTML = "";
         detailBody.innerHTML = "";
         details.open = false;
         resultEl.style.display = "block";
         resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
-      // 找两个锚点：## 评分依据 和 ## 给普通用户的提醒
+
+      // 找锚点：## 评分依据 与 ## 小贴士（兼容旧版 ## 给普通用户的提醒）
       const reScore = /(^|\n)\s*#{0,2}\s*评分依据\s*\n/;
-      const reTip = /(^|\n)\s*#{0,2}\s*给普通用户的提醒\s*\n/;
+      const reTip = /(^|\n)\s*#{0,2}\s*(小贴士|给普通用户的提醒)\s*\n/;
       let idxScore = -1, idxTip = -1;
       let m, searchFrom = 0;
       while ((m = md.slice(searchFrom).match(reScore)) !== null) {
@@ -267,26 +325,37 @@
         searchFrom = idxTip + 1;
       }
 
-      let summaryMd, detailMd;
+      let summaryMd, detailMd, tipsMd;
       if (idxScore >= 0 && idxTip > idxScore) {
-        // 首屏 = 摘要 + 给使用者的提醒；折叠区 = 评分依据
-        summaryMd = md.slice(0, idxScore).trim() + "\n\n" + md.slice(idxTip).trim();
+        summaryMd = md.slice(0, idxScore).trim();
         detailMd = md.slice(idxScore, idxTip).trim();
+        tipsMd = md.slice(idxTip).trim();
       } else if (idxScore >= 0) {
         summaryMd = md.slice(0, idxScore).trim();
         detailMd = md.slice(idxScore).trim();
+        tipsMd = "";
       } else {
         summaryMd = md;
-        detailMd = "_（本次 AI 未按要求分节，完整报告已显示在上方「风险结论」中）_";
+        detailMd = "";
+        tipsMd = "";
       }
 
-      // 去掉折叠区里重复的 "## 评分依据" 标题
+      // 清理折叠区里的重复标题和 stray ##
       detailMd = detailMd.replace(/^\s*#*\s*评分依据\s*\n*/i, "");
+      detailMd = detailMd.replace(/(^|\n)\s*#+\s*$/g, "").trim();
+      tipsMd = tipsMd.replace(/^\s*#*\s*(小贴士|给普通用户的提醒)\s*\n*/i, "").trim();
 
-      summaryEl.innerHTML = marked.parse(summaryMd);
-      // S2.1：优先把评分依据渲染成维度条；解析不到维度时降级为 Markdown
-      const dimHtml = renderDimensions(detailMd);
-      detailBody.innerHTML = dimHtml || marked.parse(detailMd);
+      summaryEl.innerHTML = marked.parse(summaryMd || "_（未获取到摘要）_");
+
+      if (tipsMd) {
+        tipsEl.style.display = "block";
+        tipsEl.innerHTML = marked.parse(tipsMd);
+      } else {
+        tipsEl.style.display = "none";
+        tipsEl.innerHTML = "";
+      }
+
+      detailBody.innerHTML = renderDimensions(detailMd);
       details.open = false;
       resultEl.style.display = "block";
       resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
