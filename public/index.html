@@ -177,23 +177,37 @@
         resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
-      // 按最后一个 "## 评分依据" 或 "评分依据" 切分（兼容 AI 漏写 ## 的情况）
-      const re = /(^|\n)\s*#{0,2}\s*评分依据\s*\n/;
-      let idx = -1;
-      let m;
-      let searchFrom = 0;
-      while ((m = md.slice(searchFrom).match(re)) !== null) {
-        idx = searchFrom + m.index + m[1].length;
-        searchFrom = idx + 1;
+      // 找两个锚点：## 评分依据 和 ## 给使用者的提醒
+      const reScore = /(^|\n)\s*#{0,2}\s*评分依据\s*\n/;
+      const reTip = /(^|\n)\s*#{0,2}\s*给使用者的提醒\s*\n/;
+      let idxScore = -1, idxTip = -1;
+      let m, searchFrom = 0;
+      while ((m = md.slice(searchFrom).match(reScore)) !== null) {
+        idxScore = searchFrom + m.index + m[1].length;
+        searchFrom = idxScore + 1;
       }
+      searchFrom = 0;
+      while ((m = md.slice(searchFrom).match(reTip)) !== null) {
+        idxTip = searchFrom + m.index + m[1].length;
+        searchFrom = idxTip + 1;
+      }
+
       let summaryMd, detailMd;
-      if (idx >= 0) {
-        summaryMd = md.slice(0, idx).trim();
-        detailMd = md.slice(idx).trim();
+      if (idxScore >= 0 && idxTip > idxScore) {
+        // 首屏 = 摘要 + 给使用者的提醒；折叠区 = 评分依据
+        summaryMd = md.slice(0, idxScore).trim() + "\n\n" + md.slice(idxTip).trim();
+        detailMd = md.slice(idxScore, idxTip).trim();
+      } else if (idxScore >= 0) {
+        summaryMd = md.slice(0, idxScore).trim();
+        detailMd = md.slice(idxScore).trim();
       } else {
         summaryMd = md;
         detailMd = "_（本次 AI 未按要求分节，完整报告已显示在上方「风险结论」中）_";
       }
+
+      // 去掉折叠区里重复的 "## 评分依据" 标题
+      detailMd = detailMd.replace(/^\s*#*\s*评分依据\s*\n*/i, "");
+
       summaryEl.innerHTML = marked.parse(summaryMd);
       detailBody.innerHTML = marked.parse(detailMd);
       details.open = false;
