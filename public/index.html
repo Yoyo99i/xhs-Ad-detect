@@ -193,6 +193,41 @@
     .modal-btn.primary { background: var(--red); color: #fff; }
     .modal-btn.primary:disabled { background: #ffb3bf; cursor: not-allowed; }
     .modal-btn.ghost { background: #f3f3f3; color: var(--ink); margin-top: 8px; }
+
+    /* ===== P3 分享卡片 ===== */
+    .share-wrap { margin-top: 22px; display: none; }
+    .share-card {
+      background: linear-gradient(160deg, #ffffff 0%, #fff6f8 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px 22px 16px;
+      box-shadow: 0 12px 32px rgba(255,46,77,.10);
+    }
+    .share-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .share-logo { font-weight: 700; font-size: 18px; color: var(--red); }
+    .share-sub { font-size: 12px; color: var(--gray); }
+    .share-level {
+      margin: 16px 0; padding: 14px 18px; border-radius: 14px; color: #fff;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .share-level .big { font-size: 30px; font-weight: 800; line-height: 1; }
+    .share-level .lab { font-size: 15px; opacity: .95; }
+    .share-concl { font-size: 15px; color: var(--ink); line-height: 1.7; margin-bottom: 14px; white-space: pre-wrap; }
+    .share-dims-head { font-size: 13px; color: var(--gray); margin-bottom: 8px; }
+    .share-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid; background: #fff; }
+    .chip .lv { font-weight: 700; }
+    .share-foot {
+      margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--line);
+      font-size: 12px; color: var(--gray); display: flex; justify-content: space-between; gap: 8px;
+    }
+    .share-actions { display: flex; gap: 10px; margin-top: 12px; }
+    .share-actions button {
+      flex: 1; padding: 11px; border-radius: 12px; font-size: 14px; cursor: pointer;
+      border: 1px solid var(--red); background: var(--red); color: #fff;
+    }
+    .share-actions button.ghost { background: #fff; color: var(--red); }
+    .share-actions button:disabled { opacity: .6; cursor: default; }
   </style>
 </head>
 <body>
@@ -229,6 +264,14 @@
         <summary>查看评分依据（7 维全览）</summary>
         <div id="detail-body" class="markdown"></div>
       </details>
+    </div>
+
+    <div id="share-wrap">
+      <div class="share-card" id="share-card"></div>
+      <div class="share-actions">
+        <button id="btn-save-img">📸 保存分享图</button>
+        <button id="btn-copy-text" class="ghost">📋 复制文字结果</button>
+      </div>
     </div>
 
     <div id="disclaimer">
@@ -308,6 +351,9 @@
     const tipsEl = document.getElementById("tips");
     const detailBody = document.getElementById("detail-body");
     const details = document.getElementById("details");
+    const shareWrap = document.getElementById("share-wrap");
+    const shareCard = document.getElementById("share-card");
+    let lastReport = null;
 
     function setStatus(msg, isErr) {
       statusEl.textContent = msg || "";
@@ -414,6 +460,8 @@
 
     function renderReport(md) {
       md = cleanReport(md);
+      lastReport = null;
+      shareWrap.style.display = "none";
       if (!md) {
         summaryEl.innerHTML = '<p class="err">未获取到分析内容，请重试或更换笔记后再次检测。</p>';
         tipsEl.style.display = "none";
@@ -472,9 +520,189 @@
 
       detailBody.innerHTML = renderDimensions(detailMd);
       details.open = false;
+
+      // P3：生成分享卡片数据并渲染
+      buildShareCard(summaryMd, detailMd);
+
       resultEl.style.display = "block";
       resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+
+    // P3：从摘要/评分依据解析出分享卡片所需字段并渲染
+    const LEVEL_COLOR = { "高": "#ff2e4d", "中": "#f5a623", "低": "#2bb673" };
+    const SITE_HOST = location.host || "xhs-ad-detect.onrender.com";
+
+    function buildShareCard(summaryMd, detailMd) {
+      const lvM = (summaryMd || "").match(/风险等级[：:]\s*(低|中|高)/);
+      const level = lvM ? lvM[1] : "中";
+      const cM = (summaryMd || "").match(/一句话结论[：:]\s*(.+)/);
+      const conclusion = cM ? cM[1].trim() : "";
+
+      const hits = parseHits(detailMd);
+      const hitList = Object.keys(hits).map(name => ({ name, level: hits[name].level }));
+
+      lastReport = { level, conclusion, hits: hitList };
+
+      const color = LEVEL_COLOR[level] || LEVEL_COLOR["中"];
+      const chipsHtml = hitList.length
+        ? hitList.map(h => {
+            const info = LEVEL_MAP[h.level] || LEVEL_MAP["中"];
+            return '<span class="chip" style="border-color:' + color + ';color:' + color + '">' +
+                     escapeHtml(h.name) + ' <span class="lv">· ' + info.label + '</span></span>';
+          }).join("")
+        : '<span class="chip" style="border-color:var(--gray);color:var(--gray)">未命中明显话术维度</span>';
+
+      shareCard.innerHTML =
+        '<div class="share-top">' +
+          '<span class="share-logo">🌱 种草甄别</span>' +
+          '<span class="share-sub">小红书笔记话术检测</span>' +
+        '</div>' +
+        '<div class="share-level" style="background:' + color + '">' +
+          '<span class="big">' + level + '</span>' +
+          '<span class="lab">' + level + '风险 · 疑似营销话术浓度</span>' +
+        '</div>' +
+        '<div class="share-concl">' + (conclusion ? escapeHtml(conclusion) : '（未获取到一句话结论）') + '</div>' +
+        '<div class="share-dims-head">命中 ' + hitList.length + ' 个话术维度</div>' +
+        '<div class="share-chips">' + chipsHtml + '</div>' +
+        '<div class="share-foot"><span>' + escapeHtml(SITE_HOST) + '</span><span>AI 生成 · 仅供参考</span></div>';
+
+      shareWrap.style.display = "block";
+    }
+
+    // P3：把分享卡片画成 PNG 下载（零依赖）
+    function wrapCn(ctx, text, maxWidth) {
+      const chars = Array.from(text || "");
+      const lines = []; let cur = "";
+      for (const ch of chars) {
+        if (cur && ctx.measureText(cur + ch).width > maxWidth) { lines.push(cur); cur = ch; }
+        else cur += ch;
+      }
+      if (cur) lines.push(cur);
+      return lines;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function saveShareImage() {
+      if (!lastReport) return;
+      const W = 720, pad = 40, scale = 2;
+      const font = '"PingFang SC","Microsoft YaHei",sans-serif';
+      const c = document.createElement("canvas");
+      const ctx = c.getContext("2d");
+      ctx.font = '16px ' + font;
+
+      // 预排版，算高度
+      const color = LEVEL_COLOR[lastReport.level] || LEVEL_COLOR["中"];
+      const conclLines = wrapCn(ctx, lastReport.conclusion || "（未获取到一句话结论）", W - pad * 2);
+      const hitLines = [];
+      if (lastReport.hits.length) {
+        for (const h of lastReport.hits) {
+          const info = LEVEL_MAP[h.level] || LEVEL_MAP["中"];
+          hitLines.push("• " + h.name + "（" + info.label + "）");
+        }
+      } else {
+        hitLines.push("• 未命中明显话术维度");
+      }
+
+      const topH = 34, levelH = 70, conclGap = 22, conclLH = 26;
+      const dimsHeadH = 30, chipH = 26, footH = 40, gap = 16;
+      let H = pad * 2 + topH + levelH + conclGap + conclLines.length * conclLH
+              + dimsHeadH + hitLines.length * 24 + footH + gap * 4;
+
+      c.width = W * scale; c.height = H * scale;
+      ctx.scale(scale, scale);
+      ctx.textBaseline = "top";
+
+      // 背景
+      ctx.fillStyle = "#fff7f8";
+      roundRect(ctx, 0, 0, W, H, 18); ctx.fill();
+
+      let y = pad;
+      // 顶部
+      ctx.fillStyle = "#ff2e4d"; ctx.font = '700 18px ' + font;
+      ctx.fillText("🌱 种草甄别", pad, y);
+      ctx.fillStyle = "#8a8a8a"; ctx.font = '12px ' + font;
+      ctx.textAlign = "right"; ctx.fillText("小红书笔记话术检测", W - pad, y + 4); ctx.textAlign = "left";
+      y += topH;
+
+      // 等级徽章
+      ctx.fillStyle = color; roundRect(ctx, pad, y, W - pad * 2, levelH, 14); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.font = '800 30px ' + font;
+      ctx.fillText(lastReport.level, pad + 18, y + 16);
+      ctx.font = '15px ' + font;
+      ctx.fillText(lastReport.level + "风险 · 疑似营销话术浓度", pad + 58, y + 26);
+      y += levelH + conclGap;
+
+      // 结论
+      ctx.fillStyle = "#1f1f1f"; ctx.font = '15px ' + font;
+      for (const ln of conclLines) { ctx.fillText(ln, pad, y); y += conclLH; }
+      y += gap;
+
+      // 命中维度
+      ctx.fillStyle = "#8a8a8a"; ctx.font = '13px ' + font;
+      ctx.fillText("命中 " + lastReport.hits.length + " 个话术维度", pad, y); y += dimsHeadH;
+      ctx.font = '14px ' + font; ctx.fillStyle = "#1f1f1f";
+      for (const ln of hitLines) { ctx.fillText(ln, pad, y); y += 24; }
+      y += gap;
+
+      // 页脚
+      ctx.strokeStyle = "#ececec"; ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+      y += 12;
+      ctx.fillStyle = "#8a8a8a"; ctx.font = '12px ' + font;
+      ctx.fillText(SITE_HOST, pad, y);
+      ctx.textAlign = "right"; ctx.fillText("AI 生成 · 仅供参考", W - pad, y); ctx.textAlign = "left";
+
+      c.toBlob(function (blob) {
+        if (!blob) { setStatus("生成图片失败，请改用「复制文字结果」或截图", true); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "种草甄别卡片.png";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        setStatus("分享图已生成，可在相册/下载目录找到「种草甄别卡片.png」");
+      }, "image/png");
+    }
+
+    function copyShareText() {
+      if (!lastReport) return;
+      const dims = lastReport.hits.length
+        ? lastReport.hits.map(h => {
+            const info = LEVEL_MAP[h.level] || LEVEL_MAP["中"];
+            return h.name + "（" + info.label + "）";
+          }).join("、")
+        : "未命中明显话术维度";
+      const text =
+        "【种草甄别】小红书笔记话术检测\n" +
+        "风险等级：" + lastReport.level + "风险\n" +
+        "结论：" + (lastReport.conclusion || "（无）") + "\n" +
+        "命中维度：" + dims + "\n" +
+        "—— AI 生成，仅供参考 · " + SITE_HOST;
+      const done = function () { setStatus("文字结果已复制到剪贴板，可粘贴到任意社交平台"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () {
+          fallbackCopy(text); done();
+        });
+      } else { fallbackCopy(text); done(); }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      ta.remove();
+    }
+
+    document.getElementById("btn-save-img").addEventListener("click", saveShareImage);
+    document.getElementById("btn-copy-text").addEventListener("click", copyShareText);
 
     let pollTimer = null;
     let pollStartAt = 0;
