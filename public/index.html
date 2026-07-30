@@ -273,7 +273,7 @@
 <body>
     <header>
     <h1>种草甄别</h1>
-    <p>粘贴小红书笔记正文，AI 帮你识别疑似营销话术浓度</p>
+    <p>粘贴小红书笔记正文，AI 帮您识别疑似营销话术浓度</p>
   </header>
 
   <main>
@@ -297,7 +297,7 @@
     <div id="result">
       <div class="result-head">📋 检测报告</div>
       <div class="card-label">下方红框即「风险结论 / 一句话判断」；再往下可展开看命中维度明细</div>
-      <div class="verdict-note">以下为 AI 对「疑似营销话术」的识别结论，可信度待你自行判断，仅供参考。</div>
+      <div class="verdict-note">以下为 AI 对「疑似营销话术」的识别结论，可信度待您自行判断，仅供参考。</div>
       <div id="summary" class="card markdown"></div>
       <div id="tips" class="card tips-card markdown" style="display:none;"></div>
       <details id="details">
@@ -361,7 +361,7 @@
     <div class="modal-card">
       <h2>意见反馈</h2>
       <div class="modal-body">
-        <p>如果您认为结果有误，或发现本工具存在问题，欢迎反馈。我们会尽快核查处理。</p>
+        <p>如果您发现结果有偏差，或在使用中遇到任何问题，欢迎随时告诉我们。您的每一条反馈都会帮助我们持续改进，我们会尽快核查并回复。</p>
         <form id="feedback-form">
           <div class="form-field">
             <label for="fb-name">怎么称呼（选填）</label>
@@ -369,7 +369,7 @@
           </div>
           <div class="form-field">
             <label for="fb-email">联系邮箱（选填）</label>
-            <input type="email" id="fb-email" name="email" placeholder="方便我们回复你">
+            <input type="email" id="fb-email" name="email" placeholder="方便我们回复您">
           </div>
           <div class="form-field">
             <label for="fb-message">反馈内容 <span class="required">*</span></label>
@@ -955,7 +955,7 @@
         if (!r.ok) throw new Error("HTTP " + r.status);
         feedbackForm.reset();
         feedbackModal.classList.remove("show");
-        showToast("✅ 反馈已收到，感谢你的建议");
+        showToast("✅ 已收到您的反馈，非常感谢您的帮助");
       } catch (err) {
         showToast("提交失败，请稍后重试");
       } finally {
