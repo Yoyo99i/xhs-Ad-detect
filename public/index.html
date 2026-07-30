@@ -492,29 +492,6 @@
     });
 
     btn.addEventListener("click", () => runAnalyze());
-
-      try {
-        const resp = await fetch("/api/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ note_text: text })
-        });
-        const data = await resp.json();
-
-        if (!resp.ok || !data.ok) {
-          const msg = (data && data.error) ? data.error : ("请求失败（HTTP " + resp.status + "）");
-          setStatus("出错了：" + msg + (data && data.code ? " [" + data.code + "]" : ""), true);
-          btn.disabled = false;
-          return;
-        }
-        // 拿到任务号，开始轮询
-        pollStartAt = Date.now();
-        pollStatus(data.taskId);
-      } catch (e) {
-        setStatus("网络或服务器错误：" + e.message, true);
-        btn.disabled = false;
-      }
-    });
   </script>
 </body>
 </html>
