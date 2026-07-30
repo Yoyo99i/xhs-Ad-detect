@@ -434,11 +434,13 @@
           const sec = Math.round((Date.now() - pollStartAt) / 1000);
           setStatus("分析完成，共耗时约 " + sec + " 秒");
           btn.disabled = false;
+          btn.textContent = "开始检测";
           return;
         }
         if (data.status === "error") {
           setStatus("分析失败：" + (data.error || "未知错误"), true);
           btn.disabled = false;
+          btn.textContent = "开始检测";
           return;
         }
         // running：每秒更新一次等待时间
@@ -447,6 +449,8 @@
         pollTimer = setTimeout(() => pollStatus(taskId), 1000);
       } catch (e) {
         setStatus("轮询出错：" + e.message + "（仍在重试）", true);
+        btn.disabled = false;
+        btn.textContent = "开始检测";
         pollTimer = setTimeout(() => pollStatus(taskId), 1000);
       }
     }
@@ -458,6 +462,7 @@
       if (text.length > 5000) { setStatus("超出 5000 字上限，请删减后再试", true); return; }
 
       btn.disabled = true;
+      btn.textContent = "检测中…";
       resultEl.style.display = "none";
       if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
       setStatus("已提交，正在启动分析…");
@@ -474,6 +479,7 @@
           const msg = (data && data.error) ? data.error : ("请求失败（HTTP " + resp.status + "）");
           setStatus("出错了：" + msg + (data && data.code ? " [" + data.code + "]" : ""), true);
           btn.disabled = false;
+          btn.textContent = "开始检测";
           return;
         }
         pollStartAt = Date.now();
@@ -481,6 +487,7 @@
       } catch (e) {
         setStatus("网络或服务器错误：" + e.message, true);
         btn.disabled = false;
+        btn.textContent = "开始检测";
       }
     }
 
