@@ -31,6 +31,19 @@
     header p { margin: 6px 0 0; font-size: 13px; opacity: .9; }
     main { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
     label { display: block; font-weight: 600; margin: 16px 0 8px; font-size: 15px; }
+    .demo-wrap { margin: 10px 0 6px; }
+    .demo-label { font-size: 13px; color: var(--gray); margin-bottom: 8px; }
+    .demo-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .demo-btns button {
+      padding: 6px 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--ink);
+    }
+    .demo-btns button:hover { border-color: var(--red); color: var(--red); }
     textarea {
       width: 100%;
       min-height: 160px;
@@ -154,14 +167,24 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>小红书种草翻车检测</h1>
-    <p>粘贴笔记正文，AI 帮你识别疑似软广 / 违规风险</p>
+    <header>
+    <h1>种草甄别</h1>
+    <p>粘贴小红书笔记正文，AI 帮你识别疑似营销话术浓度</p>
   </header>
 
   <main>
     <label for="note">粘贴小红书笔记正文</label>
     <textarea id="note" placeholder="把小红书笔记的正文粘贴到这里（最多 5000 字）…"></textarea>
+
+    <div class="demo-wrap">
+      <div class="demo-label">🧪 试试示例（虚构品牌，一键检测）</div>
+      <div class="demo-btns">
+        <button data-demo="high">高浓度营销</button>
+        <button data-demo="mid">模糊地带</button>
+        <button data-demo="low">日常分享</button>
+      </div>
+    </div>
+
     <div class="meta">最多 5000 字 · 仅作本地分析，不上传任何第三方</div>
 
     <button id="btn">开始检测</button>
@@ -185,6 +208,45 @@
   </main>
 
   <script>
+    const DEMO_NOTES = {
+      high: {
+        label: "高浓度营销",
+        text: `🔥挖到宝了！这瓶"素颜神器"我愿称之为早八救星💖
+
+姐妹们我真的要尖叫！最近入手的这瓶「肌研之钥发光精华」，用完第二天同事都问我是不是去做了项目😭
+
+✨上脸秒吸收，连用7天直接白一个度，毛孔细腻到像开了磨皮！
+⚠️重点来了：现在品牌限时宠粉，7.25-8.10 买一送一，加9.9还能薅到同系列面霜小样！手慢无！
+我愿称它是油皮亲妈，敏感肌也能闭眼入，全网都在推不是没道理的～
+本地姐妹直接冲专柜，外地宝子私我拿内部优惠码🫶
+
+#肌研之钥 #发光精华 #早八必备 #油皮救星 #素颜神器 #无限回购 #学生党护肤 #夏日美白`
+      },
+      mid: {
+        label: "模糊地带",
+        text: `安利一个我最近真在用的护手霜🤲
+
+入秋手容易干，闺蜜塞给我一支「柔雾小鹿护手霜」，说她们办公室人手一支。
+我用了一阵，味道是淡淡的奶香，不黏，放包里随时涂挺方便。
+质地偏润，北方暖气房里够用，南方可能觉得稍厚。
+不是啥大牌，小红书上也能搜到，价格三四十吧，算平价好物。
+就单纯觉得好用想分享下，你们按需入～
+
+#护手霜 #平价好物 #秋冬护肤 #柔雾小鹿 #学生党`
+      },
+      low: {
+        label: "日常分享",
+        text: `周末误入一家小馆子，有点惊喜
+
+周六本来想去常去的那家，结果人家休市，就随便在巷子里溜达，撞见一家没名字的苍蝇馆子。
+
+点了个酸菜鱼和一盘炒青菜，鱼挺新鲜，酸菜够味，就是上菜慢了点，等了得有二十分钟。
+老板话不多，看我们俩人还给多盛了碗饭。人均四十出头，在景区边上算良心了。
+谈不上多惊艳，但胜在舒服，适合不想动脑子的晚饭。下次路过可能还会去，也可能不去。
+没拍照，就随口记一笔。`
+      }
+    };
+
     const btn = document.getElementById("btn");
     const note = document.getElementById("note");
     const statusEl = document.getElementById("status");
@@ -389,8 +451,9 @@
       }
     }
 
-    btn.addEventListener("click", async () => {
-      const text = note.value.trim();
+    async function runAnalyze(preloadText) {
+      const text = preloadText || note.value.trim();
+      if (preloadText) note.value = preloadText;
       if (!text) { setStatus("请先粘贴笔记正文", true); return; }
       if (text.length > 5000) { setStatus("超出 5000 字上限，请删减后再试", true); return; }
 
@@ -398,6 +461,37 @@
       resultEl.style.display = "none";
       if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
       setStatus("已提交，正在启动分析…");
+
+      try {
+        const resp = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note_text: text })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok || !data.ok) {
+          const msg = (data && data.error) ? data.error : ("请求失败（HTTP " + resp.status + "）");
+          setStatus("出错了：" + msg + (data && data.code ? " [" + data.code + "]" : ""), true);
+          btn.disabled = false;
+          return;
+        }
+        pollStartAt = Date.now();
+        pollStatus(data.taskId);
+      } catch (e) {
+        setStatus("网络或服务器错误：" + e.message, true);
+        btn.disabled = false;
+      }
+    }
+
+    document.querySelectorAll(".demo-btns button[data-demo]").forEach(b => {
+      b.addEventListener("click", () => {
+        const key = b.dataset.demo;
+        if (DEMO_NOTES[key]) runAnalyze(DEMO_NOTES[key].text);
+      });
+    });
+
+    btn.addEventListener("click", () => runAnalyze());
 
       try {
         const resp = await fetch("/api/analyze", {
