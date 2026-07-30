@@ -177,9 +177,9 @@
         resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
-      // 找两个锚点：## 评分依据 和 ## 给使用者的提醒
+      // 找两个锚点：## 评分依据 和 ## 给普通用户的提醒
       const reScore = /(^|\n)\s*#{0,2}\s*评分依据\s*\n/;
-      const reTip = /(^|\n)\s*#{0,2}\s*给使用者的提醒\s*\n/;
+      const reTip = /(^|\n)\s*#{0,2}\s*给普通用户的提醒\s*\n/;
       let idxScore = -1, idxTip = -1;
       let m, searchFrom = 0;
       while ((m = md.slice(searchFrom).match(reScore)) !== null) {
