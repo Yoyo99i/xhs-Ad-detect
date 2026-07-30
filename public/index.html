@@ -309,9 +309,11 @@
     </div>
 
     <div id="disclaimer">
-      <b>免责声明</b>：本工具基于 AI 对文本进行软广 / 营销话术浓度识别，所有结果仅供个人参考，不构成官方认定、平台判定或法律结论。
-      本工具不对任何笔记内容的真实性、合法性或商业属性作最终判断；如因使用本结果产生争议、误判或被笔记发布者提出异议，请以相关平台及监管机构的官方认定为准，本工具及其开发者不承担相应责任。
+      <b>免责声明</b>：本工具基于 AI 对文本进行软广 / 营销话术浓度识别，所有结果仅供个人参考，不构成官方认定、平台判定或法律结论，亦不构成对任何笔记内容真实性、合法性或商业属性的认定。
+      本工具不存储、不训练您粘贴的文本，相关处理遵守《隐私说明》。因 AI 识别存在技术局限，结果可能出现偏差，请勿将本结果作为唯一依据用于重要决策，或用于针对第三方（如笔记发布者、品牌方）的评价与传播。
+      如您认为结果有误或涉嫌侵害他人权益，可通过页面反馈渠道联系我们核查处理。在法律允许范围内，开发者就服务正常运行承担责任，但不对 AI 输出结果的准确性作担保。
       · <a href="#" id="privacy-link" style="color:var(--gray);text-decoration:underline;">隐私说明</a>
+      · <a href="mailto:kkqkkqookook@qq.com?subject=种草甄别-意见反馈" id="feedback-link" style="color:var(--gray);text-decoration:underline;">意见反馈</a>
     </div>
 
     <div id="toast"></div>
@@ -735,7 +737,7 @@
         "结论：" + (lastReport.conclusion || "（无）") + "\n" +
         "命中维度：" + dims + "\n" +
         "—— AI 生成，仅供参考 · " + SITE_HOST;
-      const done = function () { showToast("📋 已复制到剪贴板，可粘贴到任意社交平台"); };
+      const done = function () { showToast("📋 已复制到剪贴板"); };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(done, function () {
           fallbackCopy(text); done();
