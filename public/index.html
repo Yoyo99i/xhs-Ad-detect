@@ -689,7 +689,7 @@
     }
 
     function saveShareImage() {
-      if (!lastReport) return;
+      if (!lastReport) { showToast("请先检测生成结果，再保存分享图"); return; }
       const W = 720, pad = 40, scale = 2;
       const font = '"PingFang SC","Microsoft YaHei",sans-serif';
       const c = document.createElement("canvas");
@@ -769,7 +769,7 @@
     }
 
     function copyShareText() {
-      if (!lastReport) return;
+      if (!lastReport) { showToast("请先检测生成结果，再复制文字结果"); return; }
       const dims = lastReport.hits.length
         ? lastReport.hits.map(h => {
             const info = LEVEL_MAP[h.level] || LEVEL_MAP["中"];
