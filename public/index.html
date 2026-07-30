@@ -98,6 +98,30 @@
     .markdown blockquote {
       border-left: 3px solid var(--red); margin: 10px 0; padding: 4px 12px; color: #555; background: #fff;
     }
+    /* S2.1 维度条：把命中维度渲染成「进度条 + 严重程度徽章 + 证据高亮」 */
+    .verdict-note {
+      font-size: 12px;
+      color: var(--gray);
+      background: #f7f7f7;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+    }
+    .dim-list { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+    .dim-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+    .dim-name { font-weight: 600; font-size: 14px; }
+    .badge { font-size: 12px; padding: 2px 10px; border-radius: 999px; color: #fff; white-space: nowrap; }
+    .lv-low { background: #f0a020; }
+    .lv-mid { background: #ff7a00; }
+    .lv-high { background: var(--red); }
+    .bar { height: 8px; background: #f0f0f0; border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; transition: width .4s ease; }
+    .bar-fill.lv-low { background: #f0a020; }
+    .bar-fill.lv-mid { background: #ff7a00; }
+    .bar-fill.lv-high { background: var(--red); }
+    .dim-evi { font-size: 13px; color: #555; margin-top: 7px; }
+    .dim-evi mark, .dim-note mark { background: #fff3a3; padding: 0 3px; border-radius: 3px; color: inherit; }
+    .dim-note { font-size: 13px; color: #555; margin: 4px 0; }
     #disclaimer {
       margin-top: 24px;
       font-size: 12px;
@@ -126,6 +150,7 @@
     <div id="result">
       <div class="result-head">📋 检测报告</div>
       <div class="card-label">下方红框即「风险结论 / 一句话判断」；再往下可展开看命中维度明细</div>
+      <div class="verdict-note">以下为 AI 对「疑似营销话术」的识别结论，可信度待你自行判断，仅供参考。</div>
       <div id="summary" class="card markdown"></div>
       <details id="details">
         <summary>查看评分依据（命中维度明细）</summary>
@@ -165,6 +190,56 @@
       idx = md.lastIndexOf("## 摘要");
       if (idx >= 0) return md.slice(idx).trim();
       return md;
+    }
+
+    // S2.1：把评分依据解析成「维度条 + 严重程度徽章 + 证据高亮」
+    function escapeHtml(s) {
+      return (s || "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    // 严重程度 → 进度条宽度(轻40/中70/重100) + 样式类 + 中文标签
+    const LEVEL_MAP = {
+      "轻": { pct: 40, cls: "lv-low", label: "轻度" },
+      "中": { pct: 70, cls: "lv-mid", label: "中度" },
+      "重": { pct: 100, cls: "lv-high", label: "重度" }
+    };
+
+    function dimBar(name, level, evidence) {
+      const info = LEVEL_MAP[level] || LEVEL_MAP["中"];
+      return (
+        '<div class="dim">' +
+          '<div class="dim-top">' +
+            '<span class="dim-name">' + escapeHtml(name) + '</span>' +
+            '<span class="badge ' + info.cls + '">' + info.label + '</span>' +
+          '</div>' +
+          '<div class="bar"><div class="bar-fill ' + info.cls + '" style="width:' + info.pct + '%"></div></div>' +
+          '<div class="dim-evi">证据原文：<mark>' + escapeHtml(evidence) + '</mark></div>' +
+        '</div>'
+      );
+    }
+
+    // 逐行解析评分依据；命中维度 → 维度条，普通说明行 → 降级为文字（引号内证据高亮）
+    function renderDimensions(detailMd) {
+      const lines = (detailMd || "").split(/\n+/).map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return "";
+      let html = '<div class="dim-list">';
+      let found = 0;
+      for (const line of lines) {
+        // 匹配：维度名（程度：轻/中/重）："证据句"
+        const m = line.match(/^(.*?)[\（(]程度[:：]\s*(轻|中|重)[\）)]\s*[:：]?\s*["“”](.+?)["“”]/);
+        if (m) {
+          found++;
+          const name = (m[1].replace(/^[-*•\d+．.、\s]+/, "").trim()) || "未命名维度";
+          html += dimBar(name, m[2], m[3]);
+        } else {
+          const safe = escapeHtml(line).replace(/["“”](.+?)["“”]/g, '<mark>$1</mark>');
+          html += '<p class="dim-note">' + safe + '</p>';
+        }
+      }
+      html += '</div>';
+      return found > 0 ? html : "";
     }
 
     function renderReport(md) {
@@ -209,7 +284,9 @@
       detailMd = detailMd.replace(/^\s*#*\s*评分依据\s*\n*/i, "");
 
       summaryEl.innerHTML = marked.parse(summaryMd);
-      detailBody.innerHTML = marked.parse(detailMd);
+      // S2.1：优先把评分依据渲染成维度条；解析不到维度时降级为 Markdown
+      const dimHtml = renderDimensions(detailMd);
+      detailBody.innerHTML = dimHtml || marked.parse(detailMd);
       details.open = false;
       resultEl.style.display = "block";
       resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
