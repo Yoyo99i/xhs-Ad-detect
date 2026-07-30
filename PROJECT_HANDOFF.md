@@ -24,7 +24,7 @@
 | S1.3 写前端页 | ✅ 已完成（7/30） | WB | `public/index.html`：粘贴框 + 调 `/api/analyze` + marked.js 渲染；首屏显示「## 摘要」、点"查看评分依据"折叠「## 评分依据」7 维明细。后端 prompt 已改三段式（## 摘要/## 评分依据/## 给普通用户的提醒）供前端按锚点拆分 |
 | S1.4 联调验证 | ⏳ 合并到 S1.6 后执行 | WB→IS | **跳过本地 PowerShell 测试**（中文编码坑+502），改为部署后真浏览器 fetch 验证 |
 | S1.5 端到端跑通 1 篇 | ⏳ 合并到 S1.6 后执行 | WB | 部署后在真浏览器粘贴首篇笔记，验证 agent 是否真检索知识库、是否按三段式输出 |
-| S1.6 部署拿公网 URL | ⬜ 下一步 | OnRender | 常驻 Node 服务（start=node server.js），环境变量 `IS_API_KEY`。**不用 Vercel**（短超时扛不住分钟级 SSE 任务）。部署完成后同时完成 S1.4 和 S1.5 的验证 |
+| S1.6 部署拿公网 URL | ✅ 已部署；⏳ 待重新 push 触发 redeploy | OnRender | 已部署（GitHub `Yoyo99i/xhs-Ad-detect` + OnRender Web Service，start=node server.js，环境变量 IS_API_KEY+PORT=3000）。**已改造为轮询架构**绕开 OnRender 免费版 ~50s 请求超时（POST /api/analyze 立即返 taskId，前端 GET /api/status 轮询）。重 push 后自动 redeploy，真浏览器测=完成 S1.4+S1.5 |
 | S2.1 维度渲染+合规措辞 | ⬜ 待做 | WB | 结果首屏给摘要，点"查看评分依据"展开 7 维；一律"疑似"，附免责条 |
 | S2.2 分享卡片 | ⬜ 待做 | WB | |
 | S2.3 隐私/关于弹层 | ⬜ 待做 | WB | 法务硬约束 |
