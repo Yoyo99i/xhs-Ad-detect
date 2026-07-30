@@ -43,7 +43,7 @@ function buildPrompt(noteText) {
     "## 给普通用户的提醒",
     "……",
     "",
-    "重要约束：不要创建文件、不要执行 SQL、不要调用任何工具、不要建评分系统、不要写代码。只需阅读笔记并直接输出上述结构报告。",
+    "重要约束：不要创建文件、不要执行 SQL、不要调用任何工具、不要建评分系统、不要写代码、不要输出'任务已完成'等总结性语句。你必须直接输出上述 Markdown 结构的完整报告，摘要、评分依据、提醒三段缺一不可。",
     "",
     "笔记原文：",
     noteText
@@ -105,6 +105,7 @@ async function runAnalyze(taskId, noteText, apiKey) {
           if (t && t.isRunning === false) {
             const msgs = t.messages || [];
             const tm = msgs.filter(m => m.say === "text" && m.text);
+            console.log(`[poll] taskIdIS=${taskIdIS} msgs=${msgs.length} textMsgs=${tm.length}`);
             if (tm.length) texts = tm.map(m => m.text);
             done = true; return;
           }
@@ -142,7 +143,7 @@ async function runAnalyze(taskId, noteText, apiKey) {
             try {
               const d = JSON.parse(data);
               if (d.taskId && !taskIdIS) taskIdIS = d.taskId;
-              if (d.message?.say === "text" && d.message.text && !d.message.partial) texts = [d.message.text];
+              if (d.message?.say === "text" && d.message.text && !d.message.partial) { texts.push(d.message.text); console.log(`[sse] text len=${d.message.text.length}`); }
             } catch {}
           }
         }
@@ -152,7 +153,7 @@ async function runAnalyze(taskId, noteText, apiKey) {
     try { reader.cancel(); } catch {}
     try { await poll; } catch {}
 
-    const result = texts.length ? texts[texts.length - 1] : null;
+    const result = texts.length ? texts.join("\n\n") : null;
     const elapsed = Date.now() - startedAt;
     if (!result) {
       store.status = "error"; store.error = "NO_RESULT"; return;
