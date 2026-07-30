@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>小红书种草翻车检测</title>
+  <title>种草甄别 - 小红书笔记话术检测</title>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
@@ -165,6 +165,32 @@
     }
     .err { color: var(--red); font-weight: 600; }
 
+    /* Toast 提示（复制成功等） */
+    #toast {
+      position: fixed; left: 50%; bottom: 80px; transform: translateX(-50%);
+      background: rgba(0,0,0,.78); color: #fff; padding: 10px 18px;
+      border-radius: 999px; font-size: 14px; z-index: 10000;
+      opacity: 0; pointer-events: none; transition: opacity .25s ease, bottom .25s ease;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; bottom: 96px; }
+
+    /* 分享区占位说明（首次进入/无结果时显示，解释白框用途） */
+    .share-section-title {
+      margin-top: 34px; padding-top: 22px; border-top: 1px dashed var(--line);
+      font-size: 15px; font-weight: 700; color: var(--ink);
+    }
+    .share-placeholder {
+      margin-top: 12px;
+    }
+    .share-placeholder .ph-card {
+      background: #fff; border: 1px dashed var(--line); border-radius: 18px;
+      padding: 30px 22px; text-align: center; color: var(--gray);
+    }
+    .share-placeholder .ph-icon { font-size: 28px; margin-bottom: 8px; }
+    .share-placeholder .ph-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+    .share-placeholder .ph-desc { font-size: 13px; line-height: 1.6; }
+
     /* P2 隐私告知弹层 */
     .modal-mask {
       position: fixed; inset: 0; background: rgba(0,0,0,.5);
@@ -195,7 +221,7 @@
     .modal-btn.ghost { background: #f3f3f3; color: var(--ink); margin-top: 8px; }
 
     /* ===== P3 分享卡片 ===== */
-    .share-wrap { margin-top: 22px; display: none; }
+    .share-wrap { margin-top: 12px; display: none; }
     .share-card {
       background: linear-gradient(160deg, #ffffff 0%, #fff6f8 100%);
       border: 1px solid var(--line);
@@ -266,6 +292,14 @@
       </details>
     </div>
 
+    <div class="share-section-title">📤 分享检测结果</div>
+    <div id="share-placeholder" class="share-placeholder">
+      <div class="ph-card">
+        <div class="ph-icon">🌱</div>
+        <div class="ph-title">检测完成后，这里会生成分享卡片</div>
+        <div class="ph-desc">可保存图片或复制文字，把结果分享到小红书、朋友圈等平台。</div>
+      </div>
+    </div>
     <div id="share-wrap">
       <div class="share-card" id="share-card"></div>
       <div class="share-actions">
@@ -275,9 +309,12 @@
     </div>
 
     <div id="disclaimer">
-      本结果由 AI 生成，仅供参考，不构成官方认定，请以平台与监管判定为准。
+      <b>免责声明</b>：本工具基于 AI 对文本进行软广 / 营销话术浓度识别，所有结果仅供个人参考，不构成官方认定、平台判定或法律结论。
+      本工具不对任何笔记内容的真实性、合法性或商业属性作最终判断；如因使用本结果产生争议、误判或被笔记发布者提出异议，请以相关平台及监管机构的官方认定为准，本工具及其开发者不承担相应责任。
       · <a href="#" id="privacy-link" style="color:var(--gray);text-decoration:underline;">隐私说明</a>
     </div>
+
+    <div id="toast"></div>
   </main>
 
   <!-- P2 隐私告知弹层 -->
@@ -353,11 +390,22 @@
     const details = document.getElementById("details");
     const shareWrap = document.getElementById("share-wrap");
     const shareCard = document.getElementById("share-card");
+    const sharePlaceholder = document.getElementById("share-placeholder");
+    const toastEl = document.getElementById("toast");
     let lastReport = null;
+    let toastTimer = null;
 
     function setStatus(msg, isErr) {
       statusEl.textContent = msg || "";
       statusEl.className = isErr ? "err" : "";
+    }
+
+    function showToast(msg, duration) {
+      duration = duration || 2000;
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), duration);
     }
 
     // 把 agent 返回的 Markdown 渲染出来。
@@ -462,6 +510,7 @@
       md = cleanReport(md);
       lastReport = null;
       shareWrap.style.display = "none";
+      sharePlaceholder.style.display = "";
       if (!md) {
         summaryEl.innerHTML = '<p class="err">未获取到分析内容，请重试或更换笔记后再次检测。</p>';
         tipsEl.style.display = "none";
@@ -525,6 +574,7 @@
       buildShareCard(summaryMd, detailMd);
 
       resultEl.style.display = "block";
+      sharePlaceholder.style.display = "none";
       resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -685,7 +735,7 @@
         "结论：" + (lastReport.conclusion || "（无）") + "\n" +
         "命中维度：" + dims + "\n" +
         "—— AI 生成，仅供参考 · " + SITE_HOST;
-      const done = function () { setStatus("文字结果已复制到剪贴板，可粘贴到任意社交平台"); };
+      const done = function () { showToast("📋 已复制到剪贴板，可粘贴到任意社交平台"); };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(done, function () {
           fallbackCopy(text); done();
@@ -750,6 +800,8 @@
       btn.disabled = true;
       btn.textContent = "检测中…";
       resultEl.style.display = "none";
+      shareWrap.style.display = "none";
+      sharePlaceholder.style.display = "";
       if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
       setStatus("已提交，正在启动分析…");
 
