@@ -48,6 +48,9 @@ function smtpSend({ from, to, subject, text }) {
       let buf = "";
       const send = (s) => socket.write(s + "\r\n");
       const b64 = (s) => Buffer.from(s, "utf-8").toString("base64");
+      const encodeSubject = (s) => `=?UTF-8?B?${b64(s)}?=`;
+      // 把 base64 正文按 76 字符/行切分（RFC 2045 建议）
+      const wrapB64 = (s) => s.replace(/(.{76})/g, "$1\r\n").trim();
       const onData = (chunk) => {
         buf += chunk.toString();
         if (!buf.includes("\r\n")) return;
@@ -66,11 +69,12 @@ function smtpSend({ from, to, subject, text }) {
           case 7:
             send(`From: ${from}`);
             send(`To: ${to}`);
-            send(`Subject: ${subject}`);
+            send(`Subject: ${encodeSubject(subject)}`);
             send("MIME-Version: 1.0");
             send("Content-Type: text/plain; charset=UTF-8");
+            send("Content-Transfer-Encoding: base64");
             send("");
-            send(text);
+            send(wrapB64(b64(text)));
             send(".");
             step++;
             break;
