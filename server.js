@@ -27,6 +27,9 @@ const TIMEOUT_MS = 180000; // agentic 任务可能 1-3 分钟，给 180s 上限
 // 内存任务表：taskId -> {status:'running'|'done'|'error', result, error}
 const taskStore = new Map();
 
+// 反馈存储文件（追加 JSONL，零依赖）
+const FEEDBACK_FILE = path.join(__dirname, "feedback.jsonl");
+
 function buildPrompt(noteText) {
   return [
     "请直接对【笔记正文】做软广/违规风险分析，只输出最终报告，不要解释、不要复述。",
@@ -239,6 +242,30 @@ const server = http.createServer(async (req, res) => {
     taskStore.set(taskId, { status: "running" });
     runAnalyze(taskId, noteText, apiKey); // 后台跑，HTTP 立即返回
     return json(res, 200, { ok: true, taskId, status: "running" });
+  }
+
+  // 意见反馈：POST /api/feedback  → 追加写入 feedback.jsonl（零依赖，国内可达）
+  if (req.url === "/api/feedback" && req.method === "POST") {
+    let raw = "";
+    for await (const c of req) raw += c;
+    let body;
+    try { body = JSON.parse(raw || "{}"); } catch { return json(res, 400, { error: "Invalid JSON", code: "BAD_BODY" }); }
+    const message = (body.message || "").toString().trim();
+    if (!message) return json(res, 400, { error: "message is required", code: "MISSING_MSG" });
+    const rec = {
+      ts: new Date().toISOString(),
+      name: (body.name || "").toString().slice(0, 60),
+      email: (body.email || "").toString().slice(0, 120),
+      message: message.slice(0, 2000),
+      ip: (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").toString().split(",")[0]
+    };
+    try {
+      fs.appendFileSync(FEEDBACK_FILE, JSON.stringify(rec) + "\n", "utf-8");
+      console.log(`[feedback] saved: ${rec.name || "(匿名)"} ${rec.message.length}字`);
+      return json(res, 200, { ok: true });
+    } catch (e) {
+      return json(res, 500, { error: "write failed", code: "WRITE_FAIL" });
+    }
   }
 
   return json(res, 404, { error: "Not found", code: "NOT_FOUND" });

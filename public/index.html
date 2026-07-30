@@ -362,10 +362,7 @@
       <h2>意见反馈</h2>
       <div class="modal-body">
         <p>如果您认为结果有误，或发现本工具存在问题，欢迎反馈。我们会尽快核查处理。</p>
-        <form id="feedback-form" action="https://formsubmit.co/kkqkkqookook@qq.com" method="POST">
-          <input type="hidden" name="_subject" value="种草甄别-意见反馈">
-          <input type="hidden" name="_template" value="table">
-          <input type="hidden" name="_next" id="feedback-next" value="">
+        <form id="feedback-form">
           <div class="form-field">
             <label for="fb-name">怎么称呼（选填）</label>
             <input type="text" id="fb-name" name="name" placeholder="昵称/名字">
@@ -379,7 +376,7 @@
             <textarea id="fb-message" name="message" rows="4" placeholder="请描述您遇到的问题或建议..." required></textarea>
           </div>
           <div class="modal-actions">
-            <button type="submit" class="modal-btn primary">提交反馈</button>
+            <button type="submit" class="modal-btn primary" id="feedback-submit">提交反馈</button>
             <button type="button" id="feedback-cancel" class="modal-btn ghost">取消</button>
           </div>
         </form>
@@ -925,16 +922,46 @@
     const feedbackModal = document.getElementById("feedback-modal");
     const feedbackLink = document.getElementById("feedback-link");
     const feedbackCancel = document.getElementById("feedback-cancel");
-    const feedbackNext = document.getElementById("feedback-next");
+    const feedbackForm = document.getElementById("feedback-form");
+    const feedbackSubmit = document.getElementById("feedback-submit");
+    const fbMessage = document.getElementById("fb-message");
 
     feedbackLink.addEventListener("click", (e) => {
       e.preventDefault();
-      feedbackNext.value = window.location.href;
       feedbackModal.classList.add("show");
     });
     feedbackCancel.addEventListener("click", () => feedbackModal.classList.remove("show"));
     feedbackModal.addEventListener("click", (e) => {
       if (e.target === feedbackModal) feedbackModal.classList.remove("show");
+    });
+
+    // 提交反馈：POST 到自有后端 /api/feedback（国内可达，无需第三方/人机验证）
+    feedbackForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = (fbMessage.value || "").trim();
+      if (!message) { showToast("请填写反馈内容"); return; }
+      feedbackSubmit.disabled = true;
+      feedbackSubmit.textContent = "提交中...";
+      try {
+        const r = await fetch("/api/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: document.getElementById("fb-name").value.trim(),
+            email: document.getElementById("fb-email").value.trim(),
+            message
+          })
+        });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        feedbackForm.reset();
+        feedbackModal.classList.remove("show");
+        showToast("✅ 反馈已收到，感谢你的建议");
+      } catch (err) {
+        showToast("提交失败，请稍后重试");
+      } finally {
+        feedbackSubmit.disabled = false;
+        feedbackSubmit.textContent = "提交反馈";
+      }
     });
 
     // 首次进入：未同意则强制弹出告知
