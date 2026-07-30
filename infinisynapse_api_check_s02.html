@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S0.2 官方接口核查报告 · InfiniSynapse API</title>
+<style>
+  :root{--bg:#f6f8fb;--card:#fff;--ink:#1d2433;--sub:#5b6678;--ok:#2f9e6e;--ok-soft:#e7f6ef;--warn:#c47d00;--warn-soft:#fff3e0;--bad:#c0392b;--bad-soft:#fdecea;--line:#e6eaf0;--acc:#7a5af0;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.65}
+  .wrap{max-width:920px;margin:0 auto;padding:24px 18px 60px}
+  header{background:linear-gradient(135deg,#7a5af0,#3b6fd4);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:18px}
+  header h1{margin:0 0 6px;font-size:20px}
+  header p{margin:0;opacity:.92;font-size:12.5px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+  h2{font-size:16px;margin:0 0 10px;color:var(--acc)}
+  h3{font-size:14px;margin:14px 0 6px}
+  pre{background:#0f1422;color:#e6edf3;padding:14px;border-radius:10px;overflow:auto;font-size:12.5px;line-height:1.5}
+  code{background:#eef1f6;padding:1px 6px;border-radius:5px;font-size:12.5px;color:#2b3650}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#fafbfd}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-right:4px}
+  .t-ok{background:var(--ok-soft);color:var(--ok)}
+  .t-warn{background:var(--warn-soft);color:var(--warn)}
+  .t-bad{background:var(--bad-soft);color:var(--bad)}
+  .impact{background:#fffaf0;border:1px solid #ffe2b8;border-radius:10px;padding:12px 14px;font-size:13px;margin-top:8px}
+  .src{font-size:11.5px;color:var(--sub);margin-top:8px}
+  ul{margin:6px 0;padding-left:20px}
+  li{margin:3px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>S0.2 官方接口核查报告</h1>
+  <p>小红书「种草翻车」检测 · 执行步骤 S0.2（WB · 软件架构师）<br>
+  用 anysearch + Web Access 实拉官方文档，坐实 /v1/query 请求体与返回结构，确认一切以官方为准</p>
+</header>
+
+<div class="card">
+  <h2>一、核查到的三份官方来源</h2>
+  <table>
+    <tr><th>文档</th><th>官方地址</th><th>用途</th></tr>
+    <tr><td>Server API Reference</td><td><code>http://infinisynapse.com/en/docs/InfiniSynapse%20Server%20API%20Reference</code>（Base: <code>https://app.infinisynapse.cn</code>）</td><td>完整 HTTP API，AI 任务走 SSE 异步</td></tr>
+    <tr><td>快速集成示例</td><td>大赛公告《InfiniSynapse × CSDN 首届 Vibe Coding 大赛》（jishuzhan.net 转载官方原文）</td><td>给出 <code>/v1/query</code> 同步捷径 + 参赛规则</td></tr>
+    <tr><td>SSO Guide</td><td>公告内「InfiniSynapse 登录」一节 + 平台接入手册</td><td>拉新计分接入（S2.5）</td></tr>
+  </table>
+  <p class="src">核查方式：Web Access 浏览器自动化依赖检测发现本地浏览器未开远程调试开关（硬门槛，需用户手动开启）；改用同 skill 允许的 curl 直拉官方页 + anysearch extract/搜索交叉验证，效果等价。三份均来自官方原文（infinisynapse.com / 大赛官方公告），非二手转述。</p>
+</div>
+
+<div class="card">
+  <h2>二、两套接口并存 —— 这是关键事实</h2>
+  <p>此前的报告 Part C 把「API 端点歧义」表述为"二选一的路径不一致"，<b>不准确</b>。实际是<b>两套独立并存的接口</b>，适用场景不同：</p>
+  <table>
+    <tr><th>维度</th><th>① 简化同步接口 <span class="tag t-ok">推荐本项目用</span></th><th>② 完整异步接口（Server API Reference）</th></tr>
+    <tr><td>地址</td><td><code>POST https://api.infinisynapse.cn/v1/query</code></td><td><code>GET /api/ai/events</code>（SSE 订阅）<br>+ <code>POST /api/ai/message</code>（发消息）</td></tr>
+    <tr><td>是否官方</td><td>是，但仅出现在<b>大赛快速集成示例</b>，不在 Server API Reference 正文</td><td>是，Server API Reference 主推</td></tr>
+    <tr><td>调用模式</td><td>同步，一次请求一次返回 JSON</td><td>异步：先建 SSE 长连接，再 POST 发消息，结果经 SSE 推送</td></tr>
+    <tr><td>请求体</td><td><code>{query, data_source}</code></td><td><code>WebviewMessage</code>：<code>{type:"newTask",text,connId}</code> 或 <code>{type:"askResponse",taskId,askResponse:"messageResponse",text}</code></td></tr>
+    <tr><td>data_source 字段</td><td><b>有</b>（直接挂数据源/RAG ID）</td><td><b>无</b>——需先在平台用 <code>POST /api/ai_rag_sdk/enabled</code> 启用 RAG，再发消息</td></tr>
+    <tr><td>适用</td><td>单篇笔记一次性体检，最简单</td><td>多轮对话、需持续交互的复杂分析</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h2>三、/v1/query 请求体与返回结构（官方示例原文）</h2>
+  <h3>请求（官方大赛公告原文）</h3>
+  <pre>import requests
+response = requests.post(
+    "https://api.infinisynapse.cn/v1/query",
+    headers={"Authorization": "Bearer sk-xxxx"},
+    json={
+        "query": "分析最近一周的销售数据，找出下滑最明显的品类",
+        "data_source": "your_datasource_id"
+    }
+)
+print(response.json())</pre>
+  <p><b>确认字段</b>：</p>
+  <ul>
+    <li><code>query</code>（string，必填）：自然语言问题 / 分析指令</li>
+    <li><code>data_source</code>（string，必填）：已启用的数据源或 RAG 知识库 ID（即我们自建的"翻车评分知识库"）</li>
+    <li>鉴权：<code>Authorization: Bearer &lt;API Key&gt;</code>（Key 仅放服务端，绝不进前端）</li>
+    <li>域名：注意是 <code>api.infinisynapse.cn</code>（非 <code>app.infinisynapse.cn</code>），走 HTTPS</li>
+  </ul>
+  <h3>返回结构（官方示例只写 <code>print(response.json())</code>，未展开字段）</h3>
+  <div class="impact">
+    <b>⚠️ 待实测确认</b>：官方快速示例未给出 <code>/v1/query</code> 的具体响应 JSON 字段（不像 Reference 的 <code>{code,message,data}</code> 统一信封那样明确）。<b>因此 S1.4 联调时必须用真实 Key 跑一次，把响应结构（是否含 code/data、分析正文在哪一层）完整记录下来</b>，再写前端解析。这是 D1 不可跳过的验证项。
+  </div>
+</div>
+
+<div class="card">
+  <h2>四、对执行计划的直接影响（需同步更正）</h2>
+  <div class="impact">
+    <p><b>结论：本项目走 ① /v1/query 同步接口最合适</b>——单篇笔记一次 POST 拿结果，且原生支持 <code>data_source</code> 挂我们自建的"翻车评分知识库"，比 ② SSE 那套少写一整套连接管理代码，2 天内更稳。</p>
+    <ul>
+      <li><b>S1.2 转发函数</b>：改为转发到 <code>https://api.infinisynapse.cn/v1/query</code>，body 为 <code>{query: 拼接后的分析指令, data_source: 自建知识库ID}</code>。无需实现 SSE 订阅。</li>
+      <li><b>S1.1 建知识库</b>：在 InfiniSynapse 建 RAG 知识库拿到 ID，作为 <code>data_source</code> 传入（与 Reference 里"先 enable RAG 再发消息"等效，但 /v1/query 把这一步内联进请求体）。</li>
+      <li><b>S1.4 联调</b>：除验证返回结构外，额外确认 <code>/v1/query</code> 单次耗时（目标 ≤ 数秒，前端需加载态/流式降级）。</li>
+      <li><b>S2.5/2.6 SSO</b>：与接口选择无关，仍按原计划作为 D2 后段可选项。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="card">
+  <h2>五、合规与计分红线（来自官方公告，已确证）</h2>
+  <table>
+    <tr><th>规则</th><th>官方原文要点</th><th>对本项目含义</th></tr>
+    <tr><td>准入三条件</td><td>必须集成 Server API 以编程方式发起分析；必须部署公网 URL；提交应用介绍+上线地址+API 集成说明+截图</td><td>S1.2/S1.6/S3.2/S3.3 是硬门槛，缺一不可</td></tr>
+    <tr><td>评分 60%</td><td>注册用户数 30% + 活跃使用量 30%，<b>以 InfiniSynapse 平台后台数据为准</b>，不计 GitHub Star/下载量</td><td>自己埋点不算；必须真实用户通过公网应用触发分析</td></tr>
+    <tr><td>拉新计分</td><td>"你拉新 → 新用户拿 500 积分体验你的应用 → 变活跃用户 → 计入评分"；可接入「InfiniSynapse 登录」让用户以自己账号授权</td><td>不接 SSO 则活跃量算在你自己 Key 头上；接 SSO 才把新用户计入你 60% 分（S2.5）</td></tr>
+    <tr><td>数据时效</td><td>评审 8/1–8/11 仍采集用户数据，8/11 起公布</td><td>提交(7/31)不是终点，S3.4 运营拉新到 8/11</td></tr>
+  </table>
+</div>
+
+<footer style="font-size:12px;color:var(--sub);text-align:center;margin-top:18px;line-height:1.8">
+  本报告为 S0.2 交付物（WB·软件架构师）。所有事实来自 InfiniSynapse 官方 Server API Reference 与大赛官方公告（anysearch + curl 实拉，2026-07-29）。<br>
+  <span class="tag t-warn">唯一待实测项</span> /v1/query 的具体响应 JSON 字段结构——须在 S1.4 用真实 Key 跑通后补入。
+</footer>
+</div>
+</body>
+</html>

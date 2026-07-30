@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书种草翻车检测 · 执行清单（中文版）</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#ffffff; --ink:#1d2433; --sub:#5b6678;
+    --wb:#2f9e6e; --wb-soft:#e7f6ef;
+    --is:#3b6fd4; --is-soft:#e8effb;
+    --line:#e6eaf0; --accent:#7a5af0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+  .wrap{max-width:920px;margin:0 auto;padding:24px 18px 60px}
+  header{background:linear-gradient(135deg,#7a5af0,#3b6fd4);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:18px}
+  header h1{margin:0 0 6px;font-size:21px}
+  header p{margin:0;opacity:.92;font-size:13px}
+  .banner{background:#fff4e5;border:1px solid #ffd8a8;color:#9a5b16;border-radius:10px;padding:10px 14px;font-size:12.5px;margin-top:12px;line-height:1.6}
+  .banner b{color:#7a3a00}
+  .progress{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+  .bar{height:10px;background:#eef1f6;border-radius:6px;overflow:hidden;margin-top:8px}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--wb),var(--is));transition:width .3s}
+  .count{font-weight:700;color:var(--accent)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:8px}
+  .chip{padding:2px 9px;border-radius:20px;font-weight:700}
+  .chip.wb{background:var(--wb-soft);color:var(--wb)}
+  .chip.is{background:var(--is-soft);color:var(--is)}
+  .phase{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:16px;overflow:hidden}
+  .phase h2{margin:0;padding:13px 16px;font-size:15px;background:#fafbfd;border-bottom:1px solid var(--line)}
+  .item{display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid #f1f3f7;align-items:flex-start}
+  .item:last-child{border-bottom:none}
+  .item.done{opacity:.55}
+  .item.done .txt{text-decoration:line-through}
+  .box{flex:0 0 22px;height:22px;border-radius:6px;border:2px solid #c7cedb;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:700;margin-top:2px}
+  .item.done .box{background:var(--accent);border-color:var(--accent)}
+  .txt{flex:1}
+  .txt .t{font-weight:600}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .tag{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:700}
+  .tag.wb{background:var(--wb-soft);color:var(--wb)}
+  .tag.is{background:var(--is-soft);color:var(--is)}
+  .tag.exp{background:#fff3e0;color:#c47d00}
+  .tag.who{background:#f0edff;color:var(--accent)}
+  .note{font-size:12px;color:var(--sub);margin-top:6px}
+  .correction{font-size:12px;color:#7a3aa0;background:#f6f0ff;border:1px solid #e3d4ff;border-radius:8px;padding:8px 12px;margin-top:8px;line-height:1.55}
+  .correction b{color:#5a2d80}
+  .warn{background:#fff6f0;border:1px solid #ffd8c2;color:#b3501b;border-radius:8px;padding:10px 14px;font-size:12px;margin:0 16px 14px}
+  footer{font-size:12px;color:var(--sub);text-align:center;margin-top:20px;line-height:1.8}
+  .btn{position:fixed;right:18px;bottom:18px;background:var(--accent);color:#fff;border:none;border-radius:30px;padding:11px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(122,90,240,.35)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>小红书「种草翻车」检测 · 执行清单</h1>
+    <p>更正后方案：纯粘贴输入 · 自建知识库作 data_source · 先用自己 Key 跑通 /v1/query · SSO 作 D2 后段可选<br>
+    赛程：截止 7/31 23:59 提交，评审 8/1–8/11 仍采集数据（我推断是约剩 2 天）</p>
+    <div class="banner">⚠️ <b>方案已更正（2026-07-30）</b>：真实 API 是 SSE 异步驱动 IS 自带 agent（非 /v1/query 同步）；知识库供 agent 检索（SSE 无 data_source 字段）；部署用 OnRender 常驻 Node（非 Vercel Serverless）。各步骤下方【修正】块为最新做法，原步骤保留作参考。完整进度与 API 事实见 PROJECT_HANDOFF.md。</div>
+  </header>
+
+  <div class="progress">
+    <div>已完成 <span class="count" id="c">0</span> / 19 步 · 当前进度</div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="legend">
+      <span class="chip wb">WB = WorkBuddy（你的 AI 助手/开发环境，不计分）</span>
+      <span class="chip is">IS = InfiniSynapse（比赛平台，被集成+裁判，决定 60% 分）</span>
+    </div>
+  </div>
+
+  <!-- D0 -->
+  <div class="phase">
+    <h2>准备阶段（D0 · 今晚，约 1–2 小时）</h2>
+    <div class="item" data-i="1">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S0.1 开账号拿钥匙</div>
+        <div class="meta"><span class="tag is">IS</span><span class="tag who">后端/平台工程师</span></div>
+        <div class="note">完成什么：在 InfiniSynapse 控制台注册账号、创建应用、拿到 API Key（Bearer Token）。这是后面所有调用的凭证。</div>
+      </div>
+    </div>
+    <div class="item" data-i="2">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S0.2 把官方文档钉死</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">软件架构师</span></div>
+        <div class="note">完成什么：用 anysearch/WebAccess 把 Server API Reference、快速集成示例、SSO Guide 拉到本地，确认 /v1/query 的请求体（query + data_source）和返回结构。避免 D1 现查。</div>
+        <div class="correction"><b>【修正】</b>真实 API 不是 /v1/query 同步，而是 SSE 异步：开 GET /api/ai/events?connId= 长连接 + POST /api/ai/message（body {type:"newTask",text,connId}）驱动 IS 自带 agent，结果从 SSE 流推送。详见 PROJECT_HANDOFF.md 第三节。<br><b>【原因】</b>实测 api.infinisynapse.cn/v1/query 返回 404（大赛示例端点已失效），官方 Server API Reference 只有异步 SSE 一套。原假设基于过时示例，必须更正，否则后端无法联通。</div>
+      </div>
+    </div>
+    <div class="item" data-i="3">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S0.3 敲定 6 维度评分体系</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">行业场景研究员 + UX 研究员</span></div>
+        <div class="note">完成什么：把「绝对化 / 功效夸张 / 软广 / 证据缺失 / 利益未披露 / 情绪裹挟」的权重、严重度分级（轻0.5/中1/重1.5）、证据句模板、prompt 草稿定稿。这是评审「严谨度」的抓手。</div>
+        <div class="correction"><b>【修正】</b>维度是 7 个（非 6 个）：①商业标识缺失0.22 ②利益未披露0.18 ③绝对化用语0.16 ④隐性营销意图0.14 ⑤功效夸张0.12 ⑥信息可信度0.10 ⑦情绪裹挟0.08（和=1.00）。权重表见 PROJECT_HANDOFF.md 第六节。<br><b>【原因】</b>S0.3 定稿时把"软广"拆成"商业标识缺失"和"隐性营销意图"两个独立维度，并补了"信息可信度"，故从 6 扩到 7。原清单写 6 维是早期草稿，需对齐定稿版。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D1 -->
+  <div class="phase">
+    <h2>D1 · 跑通最小可用（MVP 骨架）</h2>
+    <div class="item" data-i="4">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S1.1 建评分知识库（作 data_source）</div>
+        <div class="meta"><span class="tag is">IS</span><span class="tag who">后端/平台工程师</span></div>
+        <div class="note">完成什么：在 InfiniSynapse 建一个 RAG 知识库/数据源，装入「广告法禁用词 + 软广话术样本」，作为 /v1/query 的 data_source。解决无用户库问题。</div>
+        <div class="correction"><b>【修正】</b>知识库已建好并启用：知识库名 Ad_risk_scoring_dimensions（ID bbdcaa3b-7881-4470-a4e2-8c75af6dcb95，enabled=1）+ 数据源 xhs_kb_file，已双向绑定。SSE 模式下无 data_source 字段，靠 server.js 的 prompt 引导 agent 去检索该知识库。<br><b>【原因】</b>原以为靠 /v1/query 的 data_source 字段挂载，实测无此字段；agentic 模式下知识库挂载靠 prompt 引导 + 控制台"启用"开关，已实测确认知识库处于启用状态。</div>
+      </div>
+    </div>
+    <div class="item" data-i="5">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S1.2 写转发函数（持有 Key）</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">后端/平台工程师</span></div>
+        <div class="note">完成什么：写一个 Serverless 函数（持有 Key），接收前端笔记文本，转发 POST /v1/query，返回 JSON。Key 只在这层，绝不进前端。</div>
+        <div class="correction"><b>【修正】</b>已完成 server.js（非 Serverless，是常驻 Node 服务）：接收前端 /api/analyze → 开 SSE 长连接 → 发 newTask 让 IS agent 分析 → 收流提取最终 Markdown 报告返回。Key 仅 process.env.IS_API_KEY。已删旧版 api/analyze.js/dev-server.js。<br><b>【原因】</b>①真实端点是 SSE 异步非 /v1/query，写法完全不同；②agentic 任务跑 30s~3min，Vercel Serverless 短超时（默认~10s/Pro 60s）扛不住，必须用 OnRender 常驻 Node（start=node server.js）。所以不是 Serverless 函数，是常驻服务。</div>
+      </div>
+    </div>
+    <div class="item" data-i="6">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S1.3 写前端页面（纯粘贴输入）</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">前端工程师</span></div>
+        <div class="note">完成什么：单页应用——「粘贴正文」输入框 + 调转发函数 + 骨架屏/分析中态。不做链接抓取（按更正）。</div>
+        <div class="correction"><b>【修正】</b>前端下一步就做：粘贴框 + 调 /api/analyze + 用 marked.js 把返回的 result（Markdown）渲染成报告；首屏给摘要，"查看评分依据"折叠区展开 7 维明细。不链抓取（保持）。<br><b>【原因】</b>选了方向 A（顺 IS 自带 agent 的 agentic 模式），agent 直接输出 Markdown 报告而非结构化 JSON，故前端渲染 Markdown 而非画分数表格，省去反复调 prompt 逼它出 JSON 的时间（比赛仅剩约 1.5 天）。</div>
+      </div>
+    </div>
+    <div class="item" data-i="7">
+      <div class="box">~</div>
+      <div class="txt"><div class="t">S1.4 联调验证（调试，不计分）</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag exp">调试流量</span><span class="tag who">后端/平台工程师</span></div>
+        <div class="note">完成什么：验证后端→IS 链路的返回结构、单次耗时、data_source 是否生效。⚠️ 这一步是 WB 调 IS，算你自己的调试流量，不计入比赛 60% 分。</div>
+        <div class="correction"><b>【修正】</b>已跳过本地 PowerShell 联调（实测 PowerShell 发中文 body 变乱码 + 偶发 502，低收益高成本），改为「前端写好 + 部署 OnRender 后，用真浏览器 fetch 测一次」一气呵成（浏览器 fetch 自动 UTF-8，无中文坑）。<br><b>【原因】</b>本地 PowerShell 测 ≠ 真实部署环境，且中文编码坑浪费时间；真实路径是浏览器 fetch→后端→IS，UTF-8 自动正确。后端架构已用真实 Key 实测跑通（73s 返回 ok:True，结构正确）。<br><b>【当前状态】</b>尚未执行。将在 S1.6 部署完成后，用真浏览器访问公网地址验证。</div>
+      </div>
+    </div>
+    <div class="item" data-i="8">
+      <div class="box">~</div>
+      <div class="txt"><div class="t">S1.5 端到端跑通 1 篇出分</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">前端 + 后端</span></div>
+        <div class="note">完成什么：粘贴一篇笔记 → 出结果，证明完整链路通。</div>
+        <div class="correction"><b>【修正】</b>端到端目标改为：粘贴一篇笔记 → agent 返回「风险等级（低/中/高）+ 一句话结论 + 命中维度 + 提醒」的 Markdown 报告，证明链路通。不再强求出 0–100 数字分。<br><b>【原因】</b>方向 A 下 agent 输出定性报告更稳；0–100 分需方向 B 强约束 prompt 才有，时间紧先跑通定性版，有余力再升级。<br><b>【当前状态】</b>尚未执行。将与 S1.4 一起在 S1.6 部署完成后，在真浏览器里粘贴第一篇笔记验证。</div>
+      </div>
+    </div>
+    <div class="item" data-i="9">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S1.6 部署上线拿公网 URL（含 S1.4/S1.5 验证）</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag exp">第三方托管</span><span class="tag who">前端工程师</span></div>
+        <div class="note">完成什么：把代码部署到 Vercel/OnRender，得到公网可访问地址（提交硬门槛 + 真实用户入口）。</div>
+        <div class="correction"><b>【修正】</b>部署锁定 OnRender（常驻 Node，start=node server.js，环境变量配 IS_API_KEY），不用 Vercel。<br><b>【原因】</b>Vercel Serverless 默认超时太短（Hobby 10s / Pro 60s），扛不住 agentic 任务 30s~3min；OnRender 常驻服务无此限制，且满足"公网部署"硬门槛。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D2 -->
+  <div class="phase">
+    <h2>D2 · 维度渲染 + 分享 + 合规（含可选 SSO）</h2>
+    <div class="item" data-i="10">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S2.1 结果渲染 + 合规措辞</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">前端工程师 + 法务顾问</span></div>
+        <div class="note">完成什么：前端把分数拆成 6 维度条 + 证据句高亮 + 改写建议；一律用「疑似营销话术」「可信度待你判断」，加「AI 生成、仅供参考、非官方认定」免责条（法务硬约束）。</div>
+        <div class="correction"><b>【修正】</b>维度条改为 7 维（对齐 S0.3 定稿权重），其余合规措辞不变。<br><b>【原因】</b>同 S0.3，维度已从 6 扩到 7，渲染需一致。</div>
+      </div>
+    </div>
+    <div class="item" data-i="11">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S2.2 分享卡片生成</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">前端工程师</span></div>
+        <div class="note">完成什么：用 html-to-image 生成结论卡片，自动隐去原文只留结论，带应用链接。传播钩子。</div>
+      </div>
+    </div>
+    <div class="item" data-i="12">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S2.3 隐私 / 关于弹层</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">法务顾问 + 前端工程师</span></div>
+        <div class="note">完成什么：声明「文本仅用于本次分析、不持久化、与小红书官方无关」，满足合规 + 提交材料。</div>
+      </div>
+    </div>
+    <div class="item" data-i="13">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S2.4 预置 demo 笔记</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">产品经理 + UX 研究员</span></div>
+        <div class="note">完成什么：自写 3 篇脱敏笔记（翻车/正常/边界），首页一键测，降低首体验门槛。</div>
+      </div>
+    </div>
+    <div class="item" data-i="14">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S2.5 申请 SSO 凭证（可选）</div>
+        <div class="meta"><span class="tag is">IS</span><span class="tag exp">拉新开关</span><span class="tag who">后端/平台工程师</span></div>
+        <div class="note">完成什么：在 InfiniSynapse 申请 clientId/clientSecret、填回调域名白名单。接了，新用户通过你的应用登录才计入你 60% 分。</div>
+      </div>
+    </div>
+    <div class="item" data-i="15">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S2.6 SSO 回调处理（可选）</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">后端/平台工程师</span></div>
+        <div class="note">完成什么：写 /auth/infini/callback 服务端，用一次性 code 换用户信息。</div>
+      </div>
+    </div>
+    <div class="warn">权衡提示：S2.5/2.6 与「2 天出 MVP」直接冲突。建议 MVP 先用自己 Key 跑真实调用（满足准入），SSO 作 D2 后段有余力再接。冲一等奖才必须接 SSO。</div>
+  </div>
+
+  <!-- D3 -->
+  <div class="phase">
+    <h2>D3 · 打磨 + 提交 + 运营</h2>
+    <div class="item" data-i="16">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S3.1 UI 打磨</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">前端工程师</span></div>
+        <div class="note">完成什么：移动端适配、错误降级提示、加载体验优化。</div>
+      </div>
+    </div>
+    <div class="item" data-i="17">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S3.2 写 API 集成说明</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag who">后端/平台工程师 + 软件架构师</span></div>
+        <div class="note">完成什么：一页说明「调了 /v1/query、data_source 用自建知识库、Key 在服务端」——提交硬门槛材料。</div>
+        <div class="correction"><b>【修正】</b>集成说明改为「调 InfiniSynapse 自带 agent（SSE 异步：/api/ai/events + /api/ai/message），后端 server.js 持有 Key 转发，知识库 Ad_risk_scoring_dimensions 已启用供 agent 检索」。<br><b>【原因】</b>原 /v1/query 端点不存在，说明文档必须对齐真实 API，否则评审/复现会失败。</div>
+      </div>
+    </div>
+    <div class="item" data-i="18">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S3.3 比赛提交</div>
+        <div class="meta"><span class="tag is">IS</span><span class="tag who">产品经理</span></div>
+        <div class="note">完成什么：在 InfiniSynapse×CSDN 大赛页提交：应用介绍 + 上线地址 + API 集成说明 + 截图。</div>
+      </div>
+    </div>
+    <div class="item" data-i="19">
+      <div class="box">✓</div>
+      <div class="txt"><div class="t">S3.4 提交后运营拉新到 8/11</div>
+        <div class="meta"><span class="tag wb">WB</span><span class="tag is">IS</span><span class="tag who">产品经理</span></div>
+        <div class="note">完成什么：发 3 条模板（小红书/朋友圈/社群）带应用链接持续拉新；在 IS 后台看活跃量。⚠️ 提交不是终点，8/1–8/11 仍采集数据。</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    专家中文对照：软件架构师 / 后端·平台工程师 / 前端工程师 / 产品经理 / UX 研究员 / 行业场景研究员 / 法务顾问<br>
+    WB = WorkBuddy（AI 助手，帮你写代码读文档出报告，不计分）｜ IS = InfiniSynapse（比赛平台，被集成+裁判，决定 60% 分）<br>
+    提示：WB 帮你调 IS 的流量只是调试，不计入比赛成绩；真实分数靠公网应用 + 真实用户调用 +（最好）接 SSO 拉新。
+  </footer>
+</div>
+
+<button class="btn" id="reset">重置勾选</button>
+
+<script>
+  const items=[...document.querySelectorAll('.item')];
+  const c=document.getElementById('c'), bar=document.getElementById('bar');
+  const KEY='fanche_plan_cn_v1';
+  let done=JSON.parse(localStorage.getItem(KEY)||'[]');
+  function render(){
+    let n=0;
+    items.forEach(it=>{
+      const on=done.includes(it.dataset.i);
+      it.classList.toggle('done',on);
+      if(on)n++;
+    });
+    c.textContent=n; bar.style.width=(n/items.length*100)+'%';
+    localStorage.setItem(KEY,JSON.stringify(done));
+  }
+  items.forEach(it=>it.querySelector('.box').addEventListener('click',()=>{
+    const id=it.dataset.i;
+    if(done.includes(id)) done=done.filter(x=>x!==id);
+    else done.push(id);
+    render();
+  }));
+  document.getElementById('reset').addEventListener('click',()=>{done=[];render();});
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小红书种草翻车检测</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --red: #ff2e4d;
+      --red-soft: #fff0f2;
+      --ink: #1f1f1f;
+      --gray: #8a8a8a;
+      --line: #ececec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #fafafa;
+      color: var(--ink);
+      line-height: 1.7;
+    }
+    header {
+      background: var(--red);
+      color: #fff;
+      padding: 18px 20px;
+      text-align: center;
+    }
+    header h1 { margin: 0; font-size: 20px; }
+    header p { margin: 6px 0 0; font-size: 13px; opacity: .9; }
+    main { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
+    label { display: block; font-weight: 600; margin: 16px 0 8px; font-size: 15px; }
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 14px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    textarea:focus { outline: none; border-color: var(--red); }
+    .meta { font-size: 12px; color: var(--gray); margin-top: 6px; }
+    button#btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 13px;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button#btn:disabled { background: #ffb3bf; cursor: not-allowed; }
+    #status {
+      margin-top: 14px;
+      font-size: 14px;
+      color: var(--red);
+      min-height: 20px;
+    }
+    #result { margin-top: 22px; display: none; }
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+    .card h2 { margin: 0 0 10px; font-size: 16px; color: var(--red); }
+    #summary { background: var(--red-soft); border-color: #ffd6dd; }
+    details {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 4px 18px;
+    }
+    details summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 12px 0;
+      list-style: none;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::before { content: "▸ "; color: var(--red); }
+    details[open] summary::before { content: "▾ "; }
+    .markdown h3 { font-size: 15px; margin: 14px 0 6px; }
+    .markdown ul, .markdown ol { padding-left: 22px; margin: 6px 0; }
+    .markdown code {
+      background: #f3f3f3; padding: 1px 5px; border-radius: 4px; font-size: 13px;
+    }
+    .markdown blockquote {
+      border-left: 3px solid var(--red); margin: 10px 0; padding: 4px 12px; color: #555; background: #fff;
+    }
+    #disclaimer {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--gray);
+      text-align: center;
+      border-top: 1px dashed var(--line);
+      padding-top: 14px;
+    }
+    .err { color: var(--red); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>小红书种草翻车检测</h1>
+    <p>粘贴笔记正文，AI 帮你识别疑似软广 / 违规风险</p>
+  </header>
+
+  <main>
+    <label for="note">粘贴小红书笔记正文</label>
+    <textarea id="note" placeholder="把小红书笔记的正文粘贴到这里（最多 5000 字）…"></textarea>
+    <div class="meta">最多 5000 字 · 仅作本地分析，不上传任何第三方</div>
+
+    <button id="btn">开始检测</button>
+    <div id="status"></div>
+
+    <div id="result">
+      <div id="summary" class="card markdown"></div>
+      <details id="details">
+        <summary>查看评分依据</summary>
+        <div id="detail-body" class="markdown"></div>
+      </details>
+    </div>
+
+    <div id="disclaimer">
+      本结果由 AI 生成，仅供参考，不构成官方认定，请以平台与监管判定为准。
+    </div>
+  </main>
+
+  <script>
+    const btn = document.getElementById("btn");
+    const note = document.getElementById("note");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+    const summaryEl = document.getElementById("summary");
+    const detailBody = document.getElementById("detail-body");
+    const details = document.getElementById("details");
+
+    function setStatus(msg, isErr) {
+      statusEl.textContent = msg || "";
+      statusEl.className = isErr ? "err" : "";
+    }
+
+    // 把 agent 返回的 Markdown 按 "## 评分依据" 切成：首屏摘要 + 折叠明细
+    function renderReport(md) {
+      const marker = "## 评分依据";
+      const idx = md.indexOf(marker);
+      let summaryMd = md, detailMd = "";
+      if (idx >= 0) {
+        summaryMd = md.slice(0, idx).trim();
+        detailMd = md.slice(idx).trim();
+      }
+      summaryEl.innerHTML = marked.parse(summaryMd || md);
+      detailBody.innerHTML = marked.parse(detailMd || "");
+      details.open = false;
+      resultEl.style.display = "block";
+      resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    btn.addEventListener("click", async () => {
+      const text = note.value.trim();
+      if (!text) { setStatus("请先粘贴笔记正文", true); return; }
+      if (text.length > 5000) { setStatus("超出 5000 字上限，请删减后再试", true); return; }
+
+      btn.disabled = true;
+      resultEl.style.display = "none";
+      setStatus("分析中，请稍候（约 1–3 分钟，期间请勿关闭页面）…");
+
+      try {
+        const resp = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note_text: text })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok || !data.ok) {
+          const msg = (data && data.error) ? data.error : ("请求失败（HTTP " + resp.status + "）");
+          setStatus("出错了：" + msg + (data && data.code ? " [" + data.code + "]" : ""), true);
+          return;
+        }
+        renderReport(data.result);
+        setStatus("");
+      } catch (e) {
+        setStatus("网络或服务器错误：" + e.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

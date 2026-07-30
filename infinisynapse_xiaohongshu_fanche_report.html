@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书「种草翻车」检测 · 单项目深度报告（协作版）</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#fff; --ink:#1f2933; --sub:#5b6671; --line:#e3e7ec;
+    --brand:#2f6df6; --brand2:#7c3aed; --ok:#0f9d58; --warn:#d97706; --bad:#ef4444;
+    --new:#7c3aed; --new-soft:#f3edff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.7;font-size:15px;}
+  .wrap{max-width:1040px;margin:0 auto;padding:26px 20px 70px;}
+  header{background:linear-gradient(120deg,#2f6df6,#7c3aed);color:#fff;border-radius:16px;padding:26px 30px;margin-bottom:20px;}
+  header h1{margin:0 0 6px;font-size:23px;}
+  header p{margin:0;opacity:.92;font-size:13px;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 24px;margin-bottom:16px;}
+  h2{font-size:19px;margin:0 0 12px;color:var(--brand);border-bottom:2px solid var(--brand-soft);padding-bottom:6px;}
+  h3{font-size:15.5px;margin:16px 0 6px;color:var(--brand2);}
+  .lead{background:#fdf6e3;border:1px solid #f0e0a8;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:14px;color:#6b5800;}
+  .newtag{display:inline-block;background:var(--new-soft);color:var(--new);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:8px;vertical-align:middle;border:1px solid #d9c7ff;}
+  .fixtag{display:inline-block;background:#e6f9ef;color:#0f9d58;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:8px;vertical-align:middle;border:1px solid #b6e6cb;}
+  .strike{text-decoration:line-through;color:#9aa3ad;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;}
+  @media(max-width:780px){.grid{grid-template-columns:1fr;}}
+  .row{border-top:1px dashed var(--line);padding-top:10px;}
+  .row:first-child{border-top:none;padding-top:0;}
+  .k{font-weight:700;font-size:13.5px;margin-bottom:3px;display:flex;align-items:center;gap:6px;}
+  .k .n{background:var(--brand);color:#fff;width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none;}
+  .v{font-size:13.5px;color:var(--sub);}
+  .v b{color:var(--ink);}
+  .inf{background:#fef2f2;border-left:4px solid var(--bad);padding:8px 12px;border-radius:8px;font-size:12.5px;margin:8px 0;color:#9b1c1c;}
+  .inf b{color:#b91c1c;}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;}
+  th,td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;text-align:left;}
+  th{background:#f1f4f9;font-weight:600;color:var(--brand);}
+  /* persona */
+  .persona{border:1px solid #e0e6f5;border-radius:12px;padding:16px 18px;margin:12px 0;background:#fbfcff;}
+  .persona h3{margin-top:0;color:var(--brand);}
+  .kv{font-size:13px;margin:3px 0;}
+  .kv b{display:inline-block;min-width:84px;color:var(--ink);}
+  blockquote{margin:8px 0;padding:8px 14px;background:#f1f4f9;border-left:4px solid var(--brand);border-radius:0 8px 8px 0;font-size:13px;color:#3a4654;}
+  /* journey */
+  .journey{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:12px 0;}
+  @media(max-width:780px){.journey{grid-template-columns:repeat(2,1fr);}}
+  .stage{background:#fbfcff;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px;}
+  .stage b{display:block;color:var(--brand);margin-bottom:4px;}
+  .emo{font-size:18px;}
+  .swot{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+  .swot div{border-radius:8px;padding:9px 11px;font-size:12.5px;}
+  .s{background:#e7f7ee;border:1px solid #bfe6d2;} .w{background:#fff3e0;border:1px solid #ffe0b0;}
+  .o{background:#e7f0ff;border:1px solid #c3d7ff;} .t{background:#fdeaea;border:1px solid #f5c4c4;}
+  .swot b{display:block;margin-bottom:3px;font-size:12px;}
+  .metric{background:#e7f0ff;border:1px solid #c3d7ff;border-radius:10px;padding:10px 14px;margin:8px 0;font-size:13px;}
+  .todo{background:var(--new-soft);border:1px dashed var(--new);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:13.5px;}
+  .todo b{color:var(--new);}
+  footer{font-size:12px;color:var(--sub);text-align:center;margin-top:24px;line-height:1.6;}
+  code{background:#f1f4f9;padding:1px 6px;border-radius:5px;font-size:12.5px;}
+  .pill{display:inline-block;background:#eef3ff;color:var(--brand);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin:2px 3px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>📕 小红书「种草翻车」检测 · 单项目深度报告（协作版）</h1>
+  <p>InfiniSynapse Vibe Coding 参赛项目 ｜ 供多专家联合评审与开发对齐 ｜ 含原需求 11 维度 + UX 研究员补充章节</p>
+</header>
+
+<div class="lead">
+  ⏰ <b>时间现实（我推断是，基于此前官方页）</b>：截止 7/31 23:59，今天约 7/29，剩 <b>2.5 天</b>。评分 <b>60% 看真实用户调用 + 40% 看专家评审</b>。本文档目标：把「种草翻车检测」一次性讲透，<b>Part A 是你已确认的需求维度</b>，<b>Part B 是 UX 研究员补充、你原需求未覆盖的章节（带 <span class="newtag">新增</span> 标记）</b>，供其他专家在此基础上完善后直接开工。
+</div>
+
+<!-- ================= PART A ================= -->
+<section>
+  <h2>Part A ・ 已确认需求维度（来自上一轮讨论，原样保留）</h2>
+  <div class="grid">
+
+    <div class="row"><div class="k"><span class="n">1</span>介绍</div>
+      <div class="v">用户输入小红书<b>笔记链接或正文文本</b> → 系统检测是否夸大宣传、绝对化用语、疑似软广/营销话术，输出<b>「可信度评分 + 避坑要点清单 + 改写建议」</b>。本质是给单篇笔记做一次「可信度体检」。</div></div>
+
+    <div class="row"><div class="k"><span class="n">2</span>出发点</div>
+      <div class="v">小红书种草内容泛滥，用户「踩雷」成本高（买到不好用的、被夸大效果坑）。平台自身<b>不提供可信度判断</b>；年轻人对「反种草 / 避坑」有强情绪共鸣，且乐于分享「翻车」经历。</div></div>
+
+    <div class="row"><div class="k"><span class="n">3</span>切口</div>
+      <div class="v">不做「全网舆情监控」，只做<b>单篇笔记的可信度体检</b>——范围小到一周末可做。聚焦一句话：「<b>这篇到底值不值得信？</b>」</div></div>
+
+    <div class="row"><div class="k"><span class="n">4</span>创新点</div>
+      <div class="v"><b>反向视角</b>：别人做「帮你种草 / 找好物」，你做「帮你排雷」。把 InfiniSynapse 的语义分析能力用在「内容可信度判别」这个新维度上，而非商品比价。</div></div>
+
+    <div class="row"><div class="k"><span class="n">5</span>差异化</div>
+      <div class="v">基于此前作品长廊扫描（<span class="inf">我推断是</span>）：现有偏购物决策类（省钱比价 / 商品侦探 / 财格），<b>无人做「内容可信度体检」</b>。差异 = 评估对象从「商品」变成「话术 / 内容」。</div></div>
+
+    <div class="row"><div class="k"><span class="n">6</span>预期效果</div>
+      <div class="v"><b>极易传播</b>（「来测测你收藏的笔记翻没翻车」有社交裂变潜力）；真人试用门槛极低（贴链接/文本即出结果）；最有利于拉高占 60% 分的真实调用。</div></div>
+
+    <div class="row"><div class="k"><span class="n">7</span>使用技术</div>
+      <div class="v">前端：输入框 + 链接/文本解析；后端：调 InfiniSynapse 做语义风险分类（绝对化词、功效夸张、软广信号）；渲染：评分条 + 清单卡片。数据以<b>用户自贴文本</b>为主，预置几篇公开笔记做 demo。</div></div>
+
+    <div class="row"><div class="k"><span class="n">8</span>InfiniSynapse 实现</div>
+      <div class="v">把笔记文本作为分析输入，用多轮 task 让模型按你定义的「翻车维度」打分并给理由；可选建 <b>RAG 知识库</b>装入「广告法禁用词 / 绝对化用语清单」提升一致性。
+      <span class="inf">我推断是：REST 走分析任务接口（如 POST /v1/query 类，具体路径以官方 API 文档为准）；本地开发可用 agent_infini task new/ask 联调。</span></div></div>
+
+    <div class="row"><div class="k"><span class="n">9</span>还需操作</div>
+      <div class="v">① <b>你拍板「翻车」评分维度与权重</b>，避免模型随意判；② 准备 demo 数据集（几篇典型翻车 / 正常笔记）；③ <b>小红书反爬 / 登录墙</b>→ 前端<b>以「粘贴正文」为主入口</b>（<span class="fixtag">已更正</span> <span class="strike">不能只靠直采链接、直采失败降级</span> —— 更正：直采在浏览器端会撞 CORS+反爬，直接不做链接抓取，只做粘贴，见 B5/E1）。</div></div>
+
+    <div class="row"><div class="k"><span class="n">10</span>制作路径</div>
+      <div class="v"><b>D1</b> 前端 + API 打通（最小可用：粘贴文本→评分）；<b>D2</b> 维度细化 + 清单渲染 + 示例数据；<b>D3</b> 打磨 UI + 邀请真实用户试 + 提交。</div></div>
+
+    <div class="row"><div class="k"><span class="n">11</span>潜在风险</div>
+      <div class="v">误判引发争议（把真实分享判成软广）；绝对化词库不全；链接直采失败需降级为粘贴；「可信度」界定主观，专家评审可能觉得维度不够严谨。</div></div>
+
+  </div>
+</section>
+
+<!-- ================= PART B ================= -->
+<section>
+  <h2>Part B ・ UX 研究员补充章节 <span class="newtag">新增</span></h2>
+  <p class="v">以下章节是你原需求未明确覆盖、但产品成立与专家评审都绕不开的部分。每节末尾标注「<b>待其他专家确认</b>」的开放问题，便于协作完善。</p>
+
+  <!-- B1 Persona -->
+  <h3>B1 ・ 目标用户画像（Persona） <span class="newtag">新增</span></h3>
+  <div class="persona">
+    <h3>画像一：阿琳 · 25 岁 · 都市踩坑常客</h3>
+    <div class="kv"><b>身份</b>：一二线城市的年轻上班族，重度小红书用户，月均被种草下单 3–5 次。</div>
+    <div class="kv"><b>痛点</b>：常买到"图片好看实物拉胯"的东西，对"绝对化好评"已半信任半怀疑，缺一个快速验证工具。</div>
+    <div class="kv"><b>动机</b>：下单前花 10 秒测一下，避坑省心；测完愿意把"翻车笔记"截图发朋友圈/群聊。</div>
+    <div class="kv"><b>设备/场景</b>：手机为主，碎片时间（通勤、睡前），多在 App 内看到笔记后<b>复制正文</b>来测。</div>
+    <blockquote>"我就想在被种草上头的时候，有个东西泼我冷水——但又别太扫兴。"</blockquote>
+  </div>
+  <div class="persona">
+    <h3>画像二：小鹿 · 28 岁 · 内容创作者 / 素人博主</h3>
+    <div class="kv"><b>身份</b>：偶尔发测评/好物笔记的创作者，担心自己无意间用了违规绝对化用语被限流。</div>
+    <div class="kv"><b>痛点</b>：不懂《广告法》禁用词，发布前缺自检；也怕被粉丝说"你这篇是软广吧"。</div>
+    <div class="kv"><b>动机</b>：发布前用工具给自己的稿子做"合规体检 + 可信度自检"，降低风险。</div>
+    <blockquote>"要是能在发之前知道自己哪句像广告，我就安心多了。"</blockquote>
+  </div>
+  <p class="inf"><b>待其他专家确认</b>：是否要同时服务 B 端（品牌方查竞品软广）？会显著扩大范围，但 2.5 天内建议只做画像一+二（C 端个人用户）。</p>
+
+  <!-- B2 Journey -->
+  <h3>B2 ・ 用户旅程地图（含情绪曲线） <span class="newtag">新增</span></h3>
+  <div class="journey">
+    <div class="stage"><b>① 看到笔记</b><div class="emo">🤩</div>被种草，半信半疑</div>
+    <div class="stage"><b>② 复制/粘贴</b><div class="emo">🤔</div>想验证，但怕麻烦</div>
+    <div class="stage"><b>③ 等待分析</b><div class="emo">⏳</div>期待，容忍≤3秒</div>
+    <div class="stage"><b>④ 看报告</b><div class="emo">😮</div>惊讶/认同/不服</div>
+    <div class="stage"><b>⑤ 决策</b><div class="emo">🛒/🚫</div>买 or 划走</div>
+    <div class="stage"><b>⑥ 分享</b><div class="emo">📤</div>截图发群/朋友圈</div>
+  </div>
+  <table>
+    <tr><th>阶段</th><th>痛点 / 摩擦</th><th>设计机会</th></tr>
+    <tr><td>② 复制粘贴</td><td>要跳 App 复制再回来粘贴，链路长</td><td>提供"一键粘贴"引导 + 桌面端支持拖拽/链接</td></tr>
+    <tr><td>③ 等待</td><td>分析慢会流失</td><td>骨架屏 + 进度文案；首屏先出总分再流式出清单</td></tr>
+    <tr><td>④ 看报告</td><td>"可信度 60 分"太抽象、易焦虑</td><td>用维度拆解（哪句有问题）替代单一分数；给"可改进"而非"判死刑"</td></tr>
+    <tr><td>⑥ 分享</td><td>截图含个人收藏隐私</td><td>分享图自动隐去原文、只留结论卡片</td></tr>
+  </table>
+
+  <!-- B3 Competitive -->
+  <h3>B3 ・ 竞品与现有方案基准（市场差异） <span class="newtag">新增</span></h3>
+  <table>
+    <tr><th>现有方案</th><th>它做什么</th><th>我们的差异</th></tr>
+    <tr><td>小红书官方「避雷」/「踩坑」话题</td><td>UGC 标签聚合，无自动判断</td><td>我们给<b>单篇自动化可信度评分</b>，不是靠人肉刷帖</td></tr>
+    <tr><td>广告法禁用词检测工具（各类在线 checker）</td><td>只查"违禁词"，不判内容可信度</td><td>我们做<b>语义级</b>（功效夸张、证据缺失、利益相关未披露），不止字面词</td></tr>
+    <tr><td>第三方"成分/功效"查询（如美丽修行）</td><td>查商品成分，不查"话术"</td><td>评估对象是<b>内容话术</b>而非商品本身</td></tr>
+    <tr><td>本次比赛现有作品（比价/侦探/财格）</td><td>帮"买得值"</td><td>我们帮"信得过的才买"，反向视角</td></tr>
+  </table>
+  <p class="v"><b>结论</b>：直接竞品弱、间接竞品不重叠，<b>蓝海切口成立</b>（我推断是，基于公开工具与长廊扫描）。</p>
+
+  <!-- B4 维度体系 -->
+  <h3>B4 ・「翻车」评分维度体系（可操作化定义） <span class="newtag">新增</span></h3>
+  <p class="v">原需求第 9 项要求"你拍板维度与权重"。下面给出<b>建议的 6 维度框架</b>，供你确认/调整。每个维度都可被 InfiniSynapse 任务判定并给证据句。</p>
+  <table>
+    <tr><th>维度</th><th>判定信号（可检测）</th><th>建议权重</th><th>示例证据</th></tr>
+    <tr><td>① 绝对化用语</td><td>"最/第一/100%/绝无/永久"等</td><td>20%</td><td>"全网最好用"</td></tr>
+    <tr><td>② 功效夸张</td><td>违背常识的速效承诺</td><td>20%</td><td>"3 天瘦 10 斤"</td></tr>
+    <tr><td>③ 软广/营销话术</td><td>引流话术、品牌暗广、利益诱导</td><td>20%</td><td>"姐妹冲这个链接"</td></tr>
+    <tr><td>④ 证据缺失</td><td>结论无图/无数据/无来源</td><td>15%</td><td>"亲测有效"无图</td></tr>
+    <tr><td>⑤ 利益相关未披露</td><td>恰饭未声明、伪装素人</td><td>15%</td><td>通篇好评无瑕疵</td></tr>
+    <tr><td>⑥ 情绪裹挟</td><td>制造焦虑/紧迫感促单</td><td>10%</td><td>"不买就后悔"</td></tr>
+  </table>
+  <div class="metric"><b>总分公式（建议）</b>：可信度 = 100 − Σ(维度命中严重度 × 权重)。输出 0–100 分 + 每维度命中证据句。维度与权重可在配置里调整，避免模型随意判。</div>
+  <p class="inf"><b>待其他专家确认</b>：① 维度是否增减？② 权重是否合理？③ 严重度如何分级（轻/中/重）？这部分直接决定专家评审眼里的"严谨度"。</p>
+
+  <!-- B5 IA/UX -->
+  <h3>B5 ・ 信息架构与交互设计建议 <span class="newtag">新增</span></h3>
+  <div class="grid">
+    <div class="row"><div class="k">前端结构</div><div class="v">单页三区：<b>输入区</b>（文本框 + "粘贴笔记"按钮 + 可选链接框）→ <b>结果区</b>（总分卡 + 维度条 + 证据清单 + 改写建议）→ <b>行动区</b>（分享卡片 / 测下一篇 / 看示例）。</div></div>
+    <div class="row"><div class="k">结果呈现</div><div class="v">用<b>维度条</b>而非单一分数降低焦虑；每条命中配"原文高亮 + 为什么算翻车"；结尾给"可改进版话术"而非判死刑。</div></div>
+    <div class="row"><div class="k">输入方式 <span class="fixtag">已更正</span></div><div class="v"><span class="strike">链接直采失败（反爬）→ 自动提示"请粘贴正文"</span> —— <b>更正（前端工程师 E1）</b>：浏览器端直采会撞 CORS + 反爬，<b>不应做链接抓取尝试</b>，直接只做"粘贴正文"输入框，体验更稳。<b>原"可选链接框"建议砍掉</b>，避免用户以为能用、实际失败。</div></div>
+    <div class="row"><div class="k">首屏拉新</div><div class="v">放 2–3 个<b>预置 demo 笔记</b>（一篇翻车/一篇正常），用户点一下即出结果，零门槛体验。</div></div>
+  </div>
+
+  <!-- B6 Accessibility -->
+  <h3>B6 ・ 可用性与无障碍（Accessibility / 包容性） <span class="newtag">新增</span></h3>
+  <div class="swot">
+    <div class="s"><b>✅ 必须做</b>：① 评分用文字+图标双标识，不只靠颜色（色盲友好）；② 移动端字号≥16px、点击区≥44px；③ 结果区支持屏幕阅读器（语义化标签 + aria-live 播报分析完成）；④ 粘贴框支持键盘全操作。</div>
+    <div class="w"><b>⚠️ 易忽略</b>：① 分享卡片若含大段彩色高亮，打印/灰度下信息丢失；② 老年用户不懂"软广"术语，需白话解释；③ 弱网环境下骨架屏要有离线提示。</div>
+    <div class="o"><b>💡 机会</b>：把"无障碍自检"本身作为卖点（"连色盲都能看懂的避坑报告"）。</div>
+    <div class="t"><b>🚫 风险</b>：纯颜色评分若被专家用无障碍插件检测扣分，影响 40% 评审里的"完整性"。</div>
+  </div>
+
+  <!-- B7 Privacy -->
+  <h3>B7 ・ 隐私、合规与伦理 <span class="newtag">新增</span></h3>
+  <table>
+    <tr><th>议题</th><th>风险</th><th>缓解</th></tr>
+    <tr><td>用户粘贴文本归属</td><td>笔记内容含他人原创，你存储/分析是否合规</td><td><b>默认不持久化</b>用户文本，仅用于本次分析；明确告知</td></tr>
+    <tr><td>小红书反爬/ToS</td><td>直采链接可能违反平台条款</td><td>前端<b>以"粘贴正文"为主</b>，链接直采仅作便利、失败即降级</td></tr>
+    <tr><td>"软广"标签名誉风险</td><td>把真实分享误标软广，可能侵害博主名誉</td><td>结果措辞用"疑似/建议复核"，加<b>"仅供参考，非官方认定"</b>免责</td></tr>
+    <tr><td>广告法边界</td><td>我们判定"违禁词"若出错，用户据此改稿仍可能违规</td><td>提示"以平台/法律最终认定为准"，不替代法律意见</td></tr>
+  </table>
+  <p class="inf"><b>待其他专家确认</b>：是否在隐私政策里声明数据处理方式？比赛作品通常需一个简单说明页，建议 D3 加一个"关于/隐私"弹层。</p>
+
+  <!-- B8 Metrics -->
+  <h3>B8 ・ 成功度量指标 <span class="newtag">新增</span></h3>
+  <div class="metric"><b>比赛层（命门）</b>：真实用户数、活跃 API 调用量（占 60%）。设计上从 D1 就埋：分享按钮、demo 一键测、社媒传播钩子。<span class="fixtag">已更正</span> <span class="strike">这些埋点能"证明真实调用"</span> —— <b>更正</b>：用户指标 60% 以 <b>InfiniSynapse 平台后台数据为准</b>，自己埋点<strong>不算数</strong>。埋点的真实作用只是产品内部复盘，不能替代平台后台统计（见 Part X #1、官方确证 C2）。</div>
+  <div class="metric"><b>产品层（给专家看"完整度"）</b>：① 任务完成率（粘贴→出报告）；② 平均分析耗时（目标 ≤3s）；③ 分享率（测完导出卡片占比）；④ NPS / 满意度（提交后轻量问卷）。</div>
+  <div class="metric"><b>埋点建议（内部复盘用，非评分依据）</b>：事件 = 粘贴成功 / 报告生成 / 分享点击 / 复测。用于对内优化体验，<strong>不用于向平台证明调用量</strong>。</div>
+
+  <!-- B9 InfiniSynapse深化 -->
+  <h3>B9 ・ InfiniSynapse 实现深化（多轮任务 + RAG + 提示框架） <span class="newtag">新增</span></h3>
+  <div class="v">
+  <b>调用骨架</b>：前端 → 你的后端（持有 API Key）→ InfiniSynapse 分析任务。
+  <br><br>
+  <b>多轮任务设计（建议）</b>：
+  <br>① <code>task new "对这篇小红书笔记做可信度体检：{正文}"</code>
+  <br>② <code>task ask {id} "按 6 维度逐条判定，给证据句和严重度"</code>
+  <br>③ <code>task ask {id} "输出 0–100 可信度分与改写建议"</code>
+  <br><br>
+  <b>RAG 知识库（提升一致性）</b>：建一个知识库装入《广告法绝对化用语清单》《常见软广话术样本》，让每次判定标准统一、可解释。
+  <br><br>
+  <span class="inf">我推断是：REST 具体端点/字段以官方 API 文档为准（分析任务类接口，如 /v1/query 或 agent_infini 对应的 HTTP 形态）；本地用 <code>agent_infini task new/ask</code> 联调最稳。Key 通过 <code>init --api-key</code> 配置，<b>切勿硬编码在前端</b>。</span>
+  </div>
+
+  <!-- B10 Risk register -->
+  <h3>B10 ・ 风险登记与缓解（Risk Register） <span class="newtag">新增</span></h3>
+  <table>
+    <tr><th>风险</th><th>概率</th><th>影响</th><th>缓解措施</th></tr>
+    <tr><td>误判（真实分享被判软广）</td><td>中</td><td>高（名誉/争议）</td><td>措辞"疑似"+ 免责声明；维度可配置；RAG 提一致性</td></tr>
+    <tr><td>链接直采被反爬拦截</td><td>高</td><td>中</td><td>前端以"粘贴正文"为主，链接降级</td></tr>
+    <tr><td>"可信度"维度被专家批不严谨</td><td>中</td><td>中（影响 40% 评审）</td><td>B4 维度体系 + 证据句 + 权重可解释</td></tr>
+    <tr><td>分析耗时过长致流失</td><td>中</td><td>中</td><td>骨架屏 + 首屏先出总分</td></tr>
+    <tr><td>真实调用不足（60% 分不达标）</td><td>中</td><td>高</td><td>demo 一键测 + 分享卡片 + 社媒钩子，从 D1 设计</td></tr>
+    <tr><td>API Key 暴露 / 限额</td><td>低</td><td>高</td><td>Key 仅存后端；做调用频控与降级提示</td></tr>
+  </table>
+
+  <!-- B11 MVP / DoD -->
+  <h3>B11 ・ MVP 范围与验收标准（Definition of Done） <span class="newtag">新增</span></h3>
+  <table>
+    <tr><th>天</th><th>范围</th><th>完成判定（DoD）</th></tr>
+    <tr><td><b>D1</b></td><td>前端输入框 + 后端调 InfiniSynapse + 最小可用（粘贴文本→出总分）</td><td>能端到端跑通 1 篇笔记，出 0–100 分</td></tr>
+    <tr><td><b>D2</b></td><td>B4 六维度拆解 + 证据清单 + 改写建议 + 预置 demo 笔记 2–3 篇</td><td>报告含维度条与证据句；点 demo 即出结果</td></tr>
+    <tr><td><b>D3</b></td><td>UI 打磨 + 分享卡片 + 隐私/免责弹层 + 邀请真实用户 + 提交</td><td>≥10 名真实用户试用并产出调用；材料齐全提交</td></tr>
+  </table>
+  <p class="v"><b>砍掉清单（2.5 天不做）</b>：多智能体编排、账号体系、历史记录云存储、B 端品牌方功能、全网监控。</p>
+
+  <!-- B12 协作开放问题 -->
+  <h3>B12 ・ 给协作专家的开放问题清单（完善后开工） <span class="newtag">新增</span></h3>
+  <div class="todo">
+    <b>请其他专家补充 / 拍板：</b>
+    <p>1. <b>维度与权重</b>（B4）：6 维度是否增减？权重是否需要本地市场校准？</p>
+    <p>2. <b>前端形态</b>：纯网页（Vercel/OnRender）即可，还是要做小程序？影响工作量与传播。</p>
+    <p>3. <b>API 端点确认</b>：请后端/平台专家核对 InfiniSynapse 分析任务接口的真实路径与鉴权方式（我推断是 /v1/query 类，待官方文档坐实）。</p>
+    <p>4. <b>demo 数据集</b>：谁准备 2–3 篇典型翻车/正常笔记（需脱敏、获授权或自写）。</p>
+    <p>5. <b>隐私说明</b>：是否需要独立隐私页？比赛评审是否要求。</p>
+    <p>6. <b>评分文案</b>：品牌/法务视角要不要审一遍"软广""翻车"等措辞，避免对外风险。</p>
+  </div>
+</section>
+
+<!-- ================= PART X ================= -->
+<section>
+  <h2>Part X ・ 专家指出的原文错误与更正清单（集中汇总）</h2>
+  <p class="v">本章把各专家接力（Part E）与官方核实（Part D）中<b>对前序章节原文的错误/过时表述</b>集中列出，并标注更正动作。凡已回写正文的，对应章节加了 <span class="fixtag">已更正</span> 标记；未回写的，以下表为准。</p>
+  <table>
+    <tr><th>#</th><th>原文位置</th><th>原表述（错误/过时）</th><th>专家/官方更正</th><th>状态</th></tr>
+    <tr>
+      <td>1</td>
+      <td>Part B8 成功度量</td>
+      <td>"从 D1 就埋：分享按钮、demo 一键测……这些既能<b>证明'真实调用'</b>"——暗示自己埋点即可证明调用。</td>
+      <td><b>行业场景研究员 + 官方确证</b>：用户指标 60% 以 <b>InfiniSynapse 平台后台数据为准</b>，自己埋点不算。原文"证明真实调用"表述误导。</td>
+      <td><span class="fixtag">已更正</span>（见 B8 划除线）</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Part B5 输入降级 / Part A9 还需操作</td>
+      <td>多处写"可选链接框""链接直采失败需降级为粘贴"——把"链接直采"当作默认、粘贴当作降级。</td>
+      <td><b>前端工程师（E1）</b>：浏览器端直采会撞 CORS+反爬，<b>不应做链接抓取尝试</b>，直接只做"粘贴正文"，体验更稳；"链接框"建议砍掉。</td>
+      <td><span class="fixtag">已更正</span>（见 B5 / A9 划除线）</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Part C2 API 端点</td>
+      <td>写"两者路径不一致、需实测<b>二选一</b>"，把 <code>/v1/query</code> 与 <code>/api/ai/events</code> 当作互斥歧义。</td>
+      <td><b>官方一手核实（D1）</b>：两套<b>并存接口</b>非歧义。<code>/v1/query</code> 是同步捷径，<code>/api/ai/events</code> 是完整异步。本项目单轮体检用 <code>/v1/query</code> 即可，SSE 非必须。</td>
+      <td><span class="fixtag">已更正</span>（见 C2 划除线 + D1）</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Part C3-① 拉新闭环 / 全文多处</td>
+      <td>"分享卡片"被当作拉新手段，但未说明分享如何变成平台注册用户。</td>
+      <td><b>行业场景研究员 + 官方 SSO（D2）</b>：拉新计分前提是接「InfiniSynapse 登录」(SSO) 并申请 clientId/secret；不接则活跃量算在自己 Key 头上、不计拉新。这是 60% 分的开关。</td>
+      <td><span class="fixtag">已更正</span>（见 C3-① + D2 + E2/E3）</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>Part C4 / Part E5 可行性</td>
+      <td>早期称"设计分享→登录→活跃闭环否则 60% 落空"，未区分 MVP 先用自己 Key 的可行性。</td>
+      <td><b>后端/产品专家（E2/E3）</b>：MVP 可先用自己 Key 跑真实调用（满足"调用日志可查"准入），SSO 拉新作为 D2 后段可选补强；目标定位"完赛+冲中低奖"。</td>
+      <td><span class="fixtag">已更正</span>（见 E2/E3/E5）</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>Part B7 / 全文措辞</td>
+      <td>"软广""翻车"用作结果定性词。</td>
+      <td><b>法务（E4）</b>：必须改为"疑似营销话术""可信度待你判断"，结果页加"AI 生成、仅供参考、非官方认定"免责条；绝不输出定性结论。</td>
+      <td><span class="fixtag">已更正</span>（见 B7 + E4 + 合规硬约束）</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>Part C3-③ 提交后运营</td>
+      <td>原把 D3 当项目终点。</td>
+      <td><b>产品专家（E3）</b>：评审 8/1–8/11 仍有用户数据采集期，<b>提交后须持续运营拉新到 8/11</b>。</td>
+      <td><span class="fixtag">已更正</span>（见 C3-③ + E3-③）</td>
+    </tr>
+  </table>
+  <p class="v" style="margin-top:10px"><b>说明</b>：以上 7 处均为"原文表述不完整/口径过重/措辞不合规"，非事实硬错；专家接力与官方核实已逐条澄清。下方 Part A/B/C/D/E 中对应处已加删除线（表示原错）与 <span class="fixtag">已更正</span> 标记，并补入正确表述。</p>
+</section>
+
+<!-- ================= PART C ================= -->
+<section>
+  <h2>Part C ・ 行业场景研究员复核与可行性评判 <span class="newtag">新增</span></h2>
+  <p class="v">由<b>行业场景研究员（Industry Scene Researcher）</b>基于官方赛制（InfiniSynapse×CSDN 官方公告、Server API Reference、快速集成示例）逐条回应 Part B 的「待确认」项、补充原报告未覆盖要点，并给出项目可行性结论。<span class="inf">以下凡标注「<b>研究员判定</b>」均为本专家基于公开事实的判断；标注「<b>官方确证</b>」来自上述来源，非推断。</span></p>
+
+  <!-- C1 回应待确认 -->
+  <h3>C1 ・ 对 Part B 待确认议题的我的看法（逐条拍板）</h3>
+  <table>
+    <tr><th>原待确认项</th><th>行业场景研究员判定</th></tr>
+    <tr><td>B1 是否做 B 端（品牌方查竞品软广）</td><td><b>否。</b>2.5 天内只做 C 端个人用户（画像一+二）。B 端获客难、范围失控，直接砍。</td></tr>
+    <tr><td>B4 维度与权重</td><td><b>采用 6 维度框架，权重维持建议值</b>（绝对化20/功效夸张20/软广20/证据缺失15/利益未披露15/情绪裹挟10）。严重度分轻/中/重三档，命中即扣「权重×严重度系数(轻0.5/中1/重1.5)」。理由：评审 40% 看"严谨度"，可解释 + 可配置的维度体系比花哨功能更稳。</td></tr>
+    <tr><td>B5 前端形态</td><td><b>纯网页（Vercel/OnRender 静态部署）即可</b>。官方接受 Web 应用；移动端用响应式适配，不做小程序——省去审核周期，传播靠链接分享。注册用户靠"InfiniSynapse 登录"对接（见 C2）。</td></tr>
+    <tr><td>B7 隐私说明</td><td><b>必须加</b>一个"关于/隐私"弹层。官方要求提交"应用介绍"，且你处理用户粘贴文本，最简做法：声明"文本仅用于本次分析、不持久化、不对外公示"，并附"结果仅供参考，非官方认定"。</td></tr>
+    <tr><td>B7/B12 评分文案</td><td><b>"软广""翻车"对外措辞需软化</b>：结果用"疑似营销话术""可信度待核验"，避免给别人贴定性标签引发名誉争议。建议法务/品牌视角快速过一遍。</td></tr>
+    <tr><td>B9 API 端点</td><td><b>见 C2，存在官方文档内部不一致，必须实测澄清。</b></td></tr>
+    <tr><td>B12 demo 数据</td><td><b>由你（选手）自写 2–3 篇脱敏样例</b>（一篇明显翻车、一篇正常、一篇边界模糊），避免版权/隐私问题。不依赖外部抓取。</td></tr>
+  </table>
+
+  <!-- C2 API 与评分机制核实 -->
+  <h3>C2 ・ API 端点与"用户指标"计分机制（关键修正） <span class="newtag">新增</span></h3>
+  <div class="inf"><b>官方确证 · 重要修正</b>：此前报告 B8 写"自己埋点证明调用"是<b>错的</b>。官方评审规则明确：<b>用户指标以 InfiniSynapse 平台后台数据为准</b>，不计 GitHub Star/下载量。你的应用必须通过平台机制产生"注册用户"和"活跃使用量"。</div>
+  <div class="metric"><b>计分链路（官方确证）</b>：你拉新 → 新用户注册 InfiniSynapse 并拿 500 积分 → 用你的应用发起分析（活跃使用）→ 计入你 60% 评分。官方提供「InfiniSynapse 登录」让用户以自己账号授权，<b>这是拉新计分的关键开关</b>。</div>
+  <div class="metric"><b>API 端点（需实测）<span class="fixtag">已更正</span></b>：① 快速集成示例写 <code>POST https://api.infinisynapse.cn/v1/query</code>（Bearer，body 含 query+data_source）；② Server API Reference 写 Base URL <code>https://app.infinisynapse.cn</code>、全局前缀 <code>/api</code>、AI 任务为 SSE 异步（先 <code>GET /api/ai/events</code> 订阅，再 POST 发消息）。<span class="strike">两者路径表述不一致，需实测二选一</span> —— <b>更正（官方一手 D1）</b>：实为<b>两套并存接口、非歧义</b>。<code>/v1/query</code> 是同步捷径，<code>/api/ai/events</code> 是完整异步模式。本项目单轮体检用 <code>/v1/query</code> 即可，SSE 非必须。D1 只需验证该端点返回结构与单次耗时。</div>
+  <div class="v"><b>研究员建议的 D1 联调顺序</b>：① 用 <code>agent_infini task new/ask</code> 本地先跑通（CLI 文档完整）；② 再对照 Server API Reference 用 <code>curl</code> 试 <code>/api/ai/events</code> + 消息端点；③ 若 <code>/v1/query</code> 可用且返回同步 JSON，优先用（简单）；否则走 SSE 异步。Key 仅存后端，前端经你后端转发。</div>
+
+  <!-- C3 新增遗漏点 -->
+  <h3>C3 ・ 原报告未覆盖、但决定成败的遗漏点 <span class="newtag">新增</span></h3>
+  <div class="grid">
+    <div class="row"><div class="k">① 拉新闭环是命门</div><div class="v">60% 分靠"你拉来的注册用户+活跃量"。原报告只讲"分享卡片"却没讲<b>分享如何变成平台注册用户</b>。必须设计：分享页 → 落地引导"用 InfiniSynapse 登录体验"→ 新用户注册拿积分 → 在你的应用里发分析。这一步不闭环，60% 分拿不到。</div></div>
+    <div class="row"><div class="k">② 集成说明是提交硬门槛</div><div class="v">官方要求提交"API 集成说明"。原报告没提。D3 必须准备一页说明：调了哪个端点、怎么鉴权、数据流。这是准入审核材料，缺了不予评审。</div></div>
+    <div class="row"><div class="k">③ 审核期真实调用窗口</div><div class="v">评审 8/1–8/11 仍有"用户数据采集"期，<b>提交后到 8/11 仍可累积活跃量</b>。意味着 D3 提交不是终点，提交后要继续运营拉新到 8/11。原报告把 D3 当终点，需补"提交后运营期"。</div></div>
+    <div class="row"><div class="k">④ 500 积分额度</div><div class="v">注册送 500 积分可兑 Token 调 API。你的后端用你自己的 Key 跑分析会消耗你的额度；若走"用户自己登录授权"，消耗用户额度、你不被限速。<b>研究员判定</b>：优先让用户登录授权，避免你 Key 被刷爆。</div></div>
+    <div class="row"><div class="k">⑤ 内容边界与平台反感</div><div class="v">"测小红书笔记可信度"可能被小红书视为对其内容做负面判定。虽是用户自贴文本、非爬取，仍建议在隐私/关于页声明"与小红书官方无关，仅基于用户提交文本做语义分析"。</div></div>
+    <div class="row"><div class="k">⑥ 分析耗时 vs 评分体验</div><div class="v">官方样例任务跑 2–3 分钟。若每次检测要等 2 分钟，用户体验崩。需用 SSE 流式：先出总分（快），再流式出维度细节。D1 就要验证单次"可信度体检"实际耗时，若 &gt;30s 需优化 prompt 或降级为"先给总分"。</div></div>
+  </div>
+
+  <!-- C4 可行性评判 -->
+  <h3>C4 ・ 可行性综合评判（行业场景研究员）</h3>
+  <div class="swot">
+    <div class="s"><b>✅ 可行（强）</b>：① 切口稀缺、情绪流量强，利于拉新（60% 命门）；② 技术栈轻，纯前端+单次 API 调用，2.5 天可出 MVP；③ 官方送 500 积分+登录授权机制，降低基础设施负担；④ 维度体系可解释，专家 40% 分有抓手。</div>
+    <div class="w"><b>⚠️ 弱点</b>：① 链接直采被反爬，必须靠粘贴，体验打折；② "可信度"主观，易被质疑严谨度（靠 B4 维度+证据句缓解）；③ 分析耗时若长，需流式降级；④ 你 Key 额度风险（靠用户登录授权缓解）。</div>
+    <div class="o"><b>💡 机会</b>：① 评审期到 8/11，提交后仍能运营拉新；② "反种草"是长期情绪热点，作品可赛后 continued 运营；③ 若做透"分享→登录→活跃"闭环，60% 分有杠杆。</div>
+    <div class="t"><b>🚫 威胁</b>：① 2.5 天极紧，任何阻塞（API 歧义、部署故障）都会致命；② 同类"内容可信度"可能被后来者快速复制；③ 小红书平台侧潜在反感（低概率）。</div>
+  </div>
+  <div class="metric"><b>研究员最终结论</b>：<b>项目可行，且是 4 个候选里最优</b>。但"可行"的前提是三件事必须做对：<b>(1)</b> D1 先跑通 API 并验证端点/耗时；<b>(2)</b> 把"分享→InfiniSynapse 登录→活跃"闭环设计进产品（否则 60% 分落空）；<b>(3)</b> D3 提交"API 集成说明"+隐私弹层，且提交后运营到 8/11。若这三件任一件漏掉，可行性从"优"降为"险"。</div>
+  <div class="todo">
+    <b>给协作专家的最终开放问题（仅剩 2 项需平台/后端专家拍板）：</b>
+    <p>1. <b>API 端点实测</b>：D1 用 curl/CLI 验证 <code>/v1/query</code> 与 <code>/api/ai/events</code> 哪个可用、返回结构、单次耗时。这是唯一技术阻塞点。</p>
+    <p>2. <b>登录对接方式</b>：确认「InfiniSynapse 登录」如何让你拉的新用户计入你的 60% 评分（OAuth 回调/授权范围/是否需要你在平台登记应用）。直接影响拉新闭环设计。</p>
+  </div>
+</section>
+
+<!-- ================= PART D ================= -->
+<section>
+  <h2>Part D ・ 官方一手信息核实（anysearch 实拉，2026-07-29 复核）</h2>
+  <div class="inf"><b>核实方式</b>：本回合使用 anysearch 检索并读取 InfiniSynapse×CSDN 官方公告、Server API Reference、Partner SSO Integration Guide、快速集成示例、开源 CLI 仓库（chaozwn/infinisynapse-cli）等一手来源，修正 Part C 中两处"我推断是"的不准确表述。</div>
+  <h3>D1 ・ 原报告"API 端点歧义"的澄清（重要修正）</h3>
+  <table>
+    <tr><th>接口</th><th>官方出处</th><th>形态</th><th>对本项目的适用性</th></tr>
+    <tr><td><code>POST https://api.infinisynapse.cn/v1/query</code></td><td>比赛页「快速上手」示例</td><td>同步：body 含 <code>query</code> + <code>data_source</code>，直接返回 JSON</td><td><b>首选</b>。单篇笔记"可信度体检"是一次性的自然语言分析，同步接口最省事，无需维护 SSE 长连接。</td></tr>
+    <tr><td><code>GET /api/ai/events</code> (SSE) + POST 消息端点</td><td>Server API Reference 第 2 节</td><td>异步：先订阅事件流，再发消息，服务端推送</td><td>适合多轮对话任务；本项目单轮即可，非必须。</td></tr>
+  </table>
+  <p class="v"><b>研究员修正</b>：Part C2 写的"两者路径不一致、需实测二选一"表述过重。<b>事实是两套并存接口，不是歧义</b>。<code>/v1/query</code> 是给快速集成的同步捷径，<code>/api/ai/events</code> 是完整异步任务模式。本项目用 <code>/v1/query</code> 即可，<b>D1 只需验证该端点返回结构与单次耗时</b>。<span class="inf">注意：<code>/v1/query</code> 需要 <code>data_source</code> 参数——即你必须先在平台创建一个数据源（或用自己的知识库/RAG），否则查询无对象。这是 D1 联调的具体动作。</span></p>
+
+  <h3>D2 ・ Partner SSO 计分机制完整澄清（关键）</h3>
+  <div class="metric"><b>官方计分链路（确证）</b>：你拉新 → 新用户通过你的应用发起「InfiniSynapse 登录」→ 新用户注册并拿 500 积分 → 用你的应用发起分析（活跃使用）→ <b>计入你 60% 评分</b>。用户指标以平台后台数据为准。</div>
+  <div class="inf"><b>关键前置条件（原报告遗漏）</b>：要接入「InfiniSynapse 登录」并让你的拉新计入评分，<b>必须先在你的 InfiniSynapse 账号下申请接入凭证</b>：<code>clientId</code> + <code>clientSecret</code>（在平台"创建接入应用"页自助申请，回调域名白名单填你的部署域名）。流程：① 服务端 POST 创建登录会话拿 entryUrl → ② 重定向用户到 entryUrl → ③ 用户登录 → ④ 带一次性 code 跳回 returnUrl → ⑤ 服务端用 code 换用户信息。<b>clientSecret 仅存服务端，绝不进前端。</b></div>
+  <p class="v"><b>研究员判断</b>：若不接 SSO，你的应用用你自己的 API Key 跑分析，则"活跃使用量"算在你自己头上、<b>不算拉新</b>；要拿满 60% 分，SSO 接入基本是必选项。但 SSO 增加 D1-D2 工作量（需服务端 + 凭证申请），<b>和"2.5 天出 MVP"直接冲突</b>——这是本项目的核心排期矛盾，需在 Part E 专家接力中由产品/后端专家拍板优先级。</p>
+
+  <h3>D3 ・ 开源示例揭示的联调陷阱</h3>
+  <div class="v">官方示例应用（chaozwn/infinisynapse-cli 关联的 infini_app 仓库）提示：<b>Web Demo 默认是 Mock/UI 脚手架</b>；真实接入必须补齐 SSE、<code>completion_result</code> 取产物、资源（db/RAG）启用流程。对本项目的启示：不要被"能跑的前端 demo"迷惑，<b>真正提交评审要看的是"调用日志可在平台后台查验"</b>——即你的 /v1/query 调用要真实发生且可追溯。</div>
+</section>
+
+<!-- ================= PART E ================= -->
+<section>
+  <h2>Part E ・ 多专家接力评审（按顺序署名，逐位传递）</h2>
+  <p class="v">以下由「行业场景研究员」发起，依次邀请 <b>前端工程师</b> → <b>后端/平台工程师</b> → <b>产品经理</b> → <b>法务/合规</b> 给出署名意见，每位基于前一位结论继续补充，最终汇总。所有意见均针对"小红书种草翻车检测"参赛项目。</p>
+
+  <!-- E1 前端 -->
+  <h3>E1 ・ 前端工程师 · 署名意见</h3>
+  <div class="persona">
+    <h3>👨‍💻 前端工程师（Frontend Engineer）</h3>
+    <div class="kv"><b>核心判断</b>：Part B5 的交互方案可行，但有两个工程现实需校正。</div>
+    <div class="kv"><b>① 输入降级必须前置</b>：小红书链接直采在浏览器端会撞 CORS + 反爬，<b>不要在前端做"抓链接"尝试</b>，直接只做"粘贴正文"输入框，体验反而更稳。Part B5 写的"可选链接框"建议砍掉，避免用户以为能用、实际失败。</div>
+    <div class="kv"><b>② 流式渲染要做</b>：即使走同步 <code>/v1/query</code>，UI 也要先出骨架屏 + "分析中"态，拿到 JSON 后做维度条动画。不要等完整响应才渲染，否则 >2s 就流失。</div>
+    <div class="kv"><b>③ 分享卡片</b>：用 <code>html-to-image</code> 前端生成截图卡片，自动隐去原文只留结论（呼应 B2 隐私），无需后端参与，1 小时能做完。</div>
+    <div class="kv"><b>④ 部署</b>：Vercel 静态 + 一个轻量 Serverless 函数持有 API Key 转发 <code>/v1/query</code>，前端不碰 Key。Serverless 冷启动 1-2s 可接受。</div>
+    <blockquote>"前端这边 1 天能出可用版，瓶颈不在我这边，在 API 联调和 SSO。"</blockquote>
+    <div class="kv"><b>传递给下一位（后端）</b>：需要一个持有 Key 的转发端点（POST 笔记文本 → 调 /v1/query → 返回 JSON）；如果做 SSO，还需要 /auth/infini/callback 服务端处理。请后端确认 SSE 还是同步、SSO 是否本期做。</div>
+  </div>
+
+  <!-- E2 后端 -->
+  <h3>E2 ・ 后端/平台工程师 · 署名意见（承接前端 E1）</h3>
+  <div class="persona">
+    <h3>🔧 后端/平台工程师（Backend / Platform Engineer）</h3>
+    <div class="kv"><b>核心判断</b>：技术债集中在"SSO 是否本期做"和"data_source 从哪来"两个问题。</div>
+    <div class="kv"><b>① API 选型</b>：同意用同步 <code>/v1/query</code>。但注意它要 <code>data_source</code> 参数——我们<span class="inf">没有用户数据库</span>，所以最务实的做法是：<b>用你自己的 InfiniSynapse 账号建一个"翻车检测知识库/RAG"作为 data_source</b>，里面放广告法禁用词、软广话术样本，所有用户共享这个数据源。这样 /v1/query 的 query=笔记文本 + data_source=你的知识库，判定标准统一。</div>
+    <div class="kv"><b>② SSO 决策（关键）</b>：接 SSO 才能计拉新分，但需申请 clientId/secret + 服务端 5 步流程。我估算：<b>SSO 联调至少 0.5 天</b>。在 2.5 天总预算里，我的建议是 <b>D1 不做 SSO、先拿自己 Key 跑通 MVP；D2 下午若还有余力再接 SSO</b>。即：先用自己 Key 把"真实调用"跑起来（满足"调用日志可查"准入），拉新计分作为加分项后期补。</div>
+    <div class="kv"><b>③ Key 安全</b>：Serverless 环境变量存 Key，前端经 /api/analyze 转发。频控：单 IP 每分钟限 5 次，防刷爆额度。</div>
+    <div class="kv"><b>④ 提交材料</b>：API 集成说明写清楚"调了 /v1/query、data_source 用的是自建知识库、Key 在服务端"即可，这部分 D3 花 30 分钟。</div>
+    <blockquote>"技术上 2.5 天够出 MVP，但想拿满 60% 分必须接 SSO——这是产品决策，不是技术决策。"</blockquote>
+    <div class="kv"><b>传递给下一位（产品）</b>：SSO 接不接、什么时候接，决定拉新计分能否拿到。请产品基于"冲奖 vs 完赛"的目标拍板。</div>
+  </div>
+
+  <!-- E3 产品 -->
+  <h3>E3 ・ 产品经理 · 署名意见（承接后端 E2）</h3>
+  <div class="persona">
+    <h3>📊 产品经理（Product Manager）</h3>
+    <div class="kv"><b>核心判断</b>：本项目的胜负手是"传播"而非"功能完整"。基于 Part C3 的拉新闭环分析，我给出明确优先级。</div>
+    <div class="kv"><b>① 目标定位</b>：鉴于 2.5 天，<b>目标是"完赛 + 冲参与奖/三等奖"，不是冲一等奖</b>。一等奖要 2 名、强拉新，时间不够。所以 SSO 作为"锦上添花"，MVP 阶段用自己 Key 先跑通真实调用。</div>
+    <div class="kv"><b>② 传播钩子设计</b>：分享卡片文案固定为"我测了这篇小红书笔记，可信度 XX 分——来测测你收藏的"。卡片带应用链接 → 落地页引导"用 InfiniSynapse 登录体验"（即使暂未接 SSO，也可先放"注册 InfiniSynapse 拿 500 积分"的引导链接，为后期接 SSO 蓄水池）。</div>
+    <div class="kv"><b>③ 提交后运营</b>：8/1–8/11 是用户数据采集期，<b>提交不是终点</b>。准备 3 条发文模板（小红书/朋友圈/社群），每天发一条带应用链接，持续到 8/11。</div>
+    <div class="kv"><b>④ demo 数据</b>：自写 3 篇脱敏笔记（翻车/正常/边界），放在首页一键测，降低首次体验门槛。</div>
+    <blockquote>"别在功能上卷，在传播上卷。一个被人转发的简陋工具，比一个没人用的完美工具得分高。"</blockquote>
+    <div class="kv"><b>传递给下一位（法务）</b>：分享卡片和报告里用了"翻车""软广"等词，且对第三方平台（小红书）内容做负面判定，请法务确认措辞与免责边界。</div>
+  </div>
+
+  <!-- E4 法务 -->
+  <h3>E4 ・ 法务/合规 · 署名意见（承接产品 E3）</h3>
+  <div class="persona">
+    <h3>⚖️ 法务/合规顾问（Legal & Compliance）</h3>
+    <div class="kv"><b>核心判断</b>：项目有三类风险，均可通过措辞与声明规避，不构成"不能做"，但<b>必须做</b>。</div>
+    <div class="kv"><b>① 名誉/误判风险</b>：将真实用户笔记判为"软广/翻车"若出错，可能侵害博主权益。<b>强制措辞</b>：结果页用"疑似营销话术""可信度待你判断"，加"本结果由 AI 生成、仅供参考、非官方认定"免责条。绝不输出定性结论（如"这是软广"）。</div>
+    <div class="kv"><b>② 平台关系</b>：声明"与小红书官方无关，仅基于用户主动提交的文本做语义分析，不抓取平台数据"。避免被解读为对小红书的负面评判工具。</div>
+    <div class="kv"><b>③ 数据合规</b>：用户粘贴文本默认不持久化（Part B7），隐私弹层写明"文本仅用于本次分析"。若后期存日志用于优化，需单独征得同意。</div>
+    <div class="kv"><b>④ 广告法边界</b>：我们判定"违禁词"若出错，用户据此改稿仍可能违规——声明"不替代法律/平台最终认定"。</div>
+    <blockquote>"能做的边界很清晰：只做'疑似'提示 + 免责，不做'定性'判定。做到这点，风险可控。"</blockquote>
+    <div class="kv"><b>传递回发起人（行业场景研究员）</b>：合规要求已明确，请在最终可行性结论中确认：D3 必须含隐私/免责弹层 + 结果页免责条，否则不应提交。</div>
+  </div>
+
+  <!-- E5 汇总 -->
+  <h3>E5 ・ 发起人汇总（行业场景研究员）</h3>
+  <div class="swot">
+    <div class="s"><b>✅ 专家共识</b>：① 切口稀缺、传播力强，是 4 候选最优；② 技术栈轻，前端 1 天 + 后端转发 0.5 天可出 MVP；③ 用自建 RAG 知识库作 data_source 解决"无用户库"问题；④ 合规边界清晰（只做"疑似"+免责）。</div>
+    <div class="w"><b>⚠️ 核心矛盾</b>：<b>拿满 60% 分需接 SSO 拉新，但 SSO 联调 0.5 天、与 2.5 天 MVP 冲突</b>。专家一致建议：MVP 先用自己 Key 跑真实调用（满足准入），SSO 作 D2 后段可选补强。</div>
+    <div class="o"><b>💡 决胜点</b>：传播钩子（分享卡片 + 提交后运营到 8/11）比功能完整度更重要；demo 一键测降低首体验门槛。</div>
+    <div class="t"><b>🚫 硬约束</b>：D3 必须含隐私/免责弹层 + 结果页免责条（法务要求），否则不应提交；API 集成说明为提交硬门槛。</div>
+  </div>
+  <div class="metric"><b>最终可行性结论（更新 Part C4）</b>：<b>项目高度可行，建议按"完赛+冲中低奖项"定位推进</b>。D1 用自己 Key + 自建 RAG 知识库跑通 /v1/query 同步接口（验证返回结构+耗时+data_source 配置）；D2 做维度拆解渲染+分享卡片+隐私弹层，下午视余力接 SSO；D3 打磨+提交（API 集成说明+隐私页）+提交后持续运营到 8/11。<b>唯一不可妥协项</b>：法务免责条 + 隐私弹层。</div>
+</section>
+
+<!-- ================= PART F ================= -->
+<section>
+  <h2>Part F ・ InfiniSynapse 做啥 vs WorkBuddy 做啥（角色边界讲解）</h2>
+  <p class="v">本章专门回答一个容易混淆的问题：这个比赛里，<b>InfiniSynapse（参赛平台）</b> 和 <b>WorkBuddy（你现在用的 AI 助手 / 开发环境）</b> 分别扮演什么角色？基于此前比赛介绍与官方规则，把边界讲清楚。</p>
+
+  <h3>F1 ・ 两个角色的本质区别</h3>
+  <table>
+    <tr><th>维度</th><th>InfiniSynapse（参赛平台）</th><th>WorkBuddy（AI 助手 / 你的开发环境）</th></tr>
+    <tr>
+      <td><b>它是什么</b></td>
+      <td>比赛主办方提供的<b>数据分析 PaaS</b>。提供 Server API、AI 分析能力、数据源/RAG 管理、用户账号体系与<b>评分后台</b>。</td>
+      <td>你日常使用的<b>通用 AI 助手 + 代码/文档工作台</b>。能读文件、写代码、检索、生成报告、发邮件——但<b>不是比赛平台</b>，不参与评分。</td>
+    </tr>
+    <tr>
+      <td><b>在比赛里的角色</b></td>
+      <td><b>被集成方 + 裁判</b>。你的作品必须调用它的 API 做分析；它的后台统计"注册用户数 + 活跃调用量"直接决定你 60% 的分数。</td>
+      <td><b>你的生产力工具</b>。帮助你读官方文档、设计维度、写前端/后端代码、生成这份报告、发邮件——<b>这些都不计入比赛评分</b>。</td>
+    </tr>
+    <tr>
+      <td><b>谁产生"真实调用"</b></td>
+      <td><b>只有它</b>。用户通过你的应用发起的分析请求，打到 InfiniSynapse 的 /v1/query，才算"活跃使用量"。</td>
+      <td>WorkBuddy 调用 InfiniSynapse（比如我帮你联调测试）产生的请求，<b>算你自己的调试调用，不算真实用户拉新</b>。</td>
+    </tr>
+  </table>
+  <div class="inf"><b>一句话区分</b>：InfiniSynapse 是"你的作品要调用且据此打分的那套云端服务"；WorkBuddy 是"帮你把作品做出来的那把瑞士军刀"。前者进比赛、后者不进。</div>
+
+  <h3>F2 ・ 具体到"种草翻车检测"，各自负责什么</h3>
+  <div class="grid">
+    <div class="row"><div class="k">🟦 InfiniSynapse 负责（平台侧）</div>
+      <div class="v">
+        <p>① <b>跑分析</b>：接收笔记文本 + 你的知识库(data_source)，用 LLM 按 6 维度判定、出可信度分与证据句。</p>
+        <p>② <b>存知识库/RAG</b>：你建的"广告法禁用词 + 软广话术样本"知识库，作为 data_source 被查询引用。</p>
+        <p>③ <b>账号与计分</b>：用户通过「InfiniSynapse 登录」注册/授权；后台统计活跃量，决定 60% 评分。</p>
+        <p>④ <b>发 API Key / clientId</b>：你申请 Key 调 /v1/query，申请 SSO 凭证接登录。</p>
+      </div>
+    </div>
+    <div class="row"><div class="k">🟩 WorkBuddy 负责（你的工具侧）</div>
+      <div class="v">
+        <p>① <b>写代码</b>：生成前端页面、Serverless 转发函数、SSO 回调处理。</p>
+        <p>② <b>读官方文档 / 检索</b>：用 anysearch 拉比赛公告、API Reference、SSO Guide（本报告的 Part D 来源）。</p>
+        <p>③ <b>设计</b>：和你一起定 6 维度权重、用户画像、交互方案（本报告 Part A/B）。</p>
+        <p>④ <b>文档与协作</b>：生成这份评审报告、汇总专家意见、发邮件给你和其他专家。</p>
+        <p>⑤ <b>联调辅助</b>：帮你跑 curl 测 /v1/query、验证返回结构（但这是你自己的调试调用，不计入评分）。</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>F3 ・ 一个必须划清的红线（避免白忙）</h3>
+  <div class="inf"><b>WorkBuddy 帮你做的"调用 InfiniSynapse"不算比赛成绩。</b> 比如我（WorkBuddy）在联调时用自己的 Key 调了 100 次 /v1/query，这 100 次只算你的调试流量，<b>不会变成"真实用户活跃量"</b>。真正计分的是：<b>真实用户通过你部署的公网应用 → 触发 InfiniSynapse 分析</b>。所以 WorkBuddy 的价值在于"把作品做出来并做对"，而不是"替你刷调用"。</div>
+  <div class="v"><b>对应到排期</b>：WorkBuddy 在 D1–D3 帮你产出代码、文档、联调脚本；但最终 60% 分数要靠你<b>把应用部署上线 + 真实用户通过它调用 InfiniSynapse +（最好）接 SSO 拉新</b>来拿。WorkBuddy 不能替代这一步。</div>
+
+  <h3>F4 ・ 用一张流图记忆（建议贴给协作专家）</h3>
+  <div class="metric" style="font-family:monospace;line-height:1.9">
+    真实用户 ──访问──► 你部署的应用(WorkBuddy 写的代码)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ 粘贴笔记正文<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
+    你的 Serverless 后端(WorkBuddy 写, 持有 Key) ──调──► <b>InfiniSynapse /v1/query</b>(平台)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ 引用 data_source=你的知识库<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
+    返回可信度报告 ◄── 平台判定结果&nbsp;&nbsp;&nbsp;&nbsp; 平台后台统计"活跃量" ──► <b>计入你 60% 评分</b><br>
+    <span style="color:#5b6671">（WorkBuddy 只在"写代码/文档/联调"出现，不进这条计分链路）</span>
+  </div>
+</section>
+
+<footer>
+  本报告由 UX Researcher 发起整理，行业场景研究员（Industry Scene Researcher）复核补充 Part C/D，多专家接力评审补充 Part E，并由 LongManuscriptExpert 补充 Part X（错误更正清单）与 Part F（InfiniSynapse vs WorkBuddy 角色边界），供开发对齐。<br>
+  Part A = 已确认需求（11 维度）；Part B = UX 研究员补充；Part C = 行业场景研究员复核与可行性；Part D = 官方一手信息核实（anysearch 实拉，修正 API 歧义与 SSO 计分机制）；Part E = 前端/后端/产品/法务四位专家署名接力意见 + 发起人汇总；Part X = 专家指出的原文错误与更正清单（集中汇总）；Part F = InfiniSynapse vs WorkBuddy 角色边界讲解。<br>
+  标注「官方确证」来自 InfiniSynapse×CSDN 官方公告、Server API Reference、Partner SSO Integration Guide、快速集成示例与开源 CLI 仓库（2026-07-29 检索）。信息截至 2026-07-29。带删除线 + <span class="fixtag">已更正</span> 标记处为专家/官方对前序章节的更正回写。
+</footer>
+
+</div>
+</body>
+</html>

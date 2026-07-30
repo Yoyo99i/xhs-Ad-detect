@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书实帖印证 · 评分维度补充（S0.3b）</title>
+<style>
+  :root{--bg:#fff;--ink:#1f2329;--soft:#f5f6f8;--line:#e6e8eb;--acc:#ff2e4d;--ok:#07a35a;--warn:#e8920c;--new:#3a5bff;}
+  body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;max-width:880px;margin:0 auto;padding:32px 22px;color:var(--ink);line-height:1.7;background:var(--bg);}
+  h1{font-size:24px;margin:0 0 4px}h2{font-size:19px;margin:30px 0 10px;border-left:4px solid var(--acc);padding-left:10px}
+  h3{font-size:15px;margin:18px 0 6px;color:#444}
+  .meta{color:#8a9099;font-size:13px;margin-bottom:18px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:7px 9px;vertical-align:top;text-align:left}
+  th{background:var(--soft);font-weight:700}
+  .tag{display:inline-block;background:#fff0f2;color:var(--acc);font-size:11px;padding:1px 7px;border-radius:5px;margin:1px}
+  .new{color:var(--new);font-weight:700}
+  .box{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:12px 0}
+  .warnbox{background:#fff8ec;border:1px solid #f3d99b;border-radius:10px;padding:14px 16px;margin:12px 0}
+  .okbox{background:#edfaf2;border:1px solid #a7e3c1;border-radius:10px;padding:14px 16px;margin:12px 0}
+  code{background:#f0f1f3;padding:1px 6px;border-radius:4px;font-size:12.5px}
+  ul{margin:6px 0 6px 18px;padding:0}li{margin:4px 0}
+  .strike{text-decoration:line-through;color:#9aa0a6}
+  footer{margin-top:30px;padding-top:14px;border-top:1px solid var(--line);color:#8a9099;font-size:12.5px}
+</style>
+</head>
+<body>
+<h1>小红书实帖印证 · 评分维度补充报告</h1>
+<div class="meta">S0.3b 补充 ｜ 执行人：行业场景研究员 ｜ 工具：Web Access（浏览器 CDP，已登录态）｜ 日期：2026-07-29</div>
+
+<h2>一、检索动作说明</h2>
+<div class="box">
+用 Web Access 的 CDP 模式直连你已登录的 Edge 浏览器，在小红书搜索两个词：<br>
+① <b>「如何鉴别广告推文」</b> ② <b>「好物分享起号方法」</b>。<br>
+拿到真实搜索结果（标题/作者/赞/标签）。<b>限制</b>：小红书网页版对程序化访问的笔记详情页有拦截（"页面不见了，请扫码查看"），且多数方法论帖为<b>图片笔记</b>（文字在图里），故详情正文未全量提取；本报告的印证基于<b>搜索结果列表的真实社区信号</b> + 你的洞察 + 此前 anysearch 拉到的社区公开方法论。
+</div>
+
+<h2>二、实帖信号：鉴别广告类（印证既有维度）</h2>
+<table>
+<tr><th>帖子标题</th><th>作者</th><th>赞</th><th>标签/信号</th><th>印证维度</th></tr>
+<tr><td>别再做韭菜了❗️一招教你识破小红书所有软广</td><td>是脆脆啊</td><td>—</td><td><span class="tag">#广告标识</span><span class="tag">#博主接广避雷</span><span class="tag">#拒绝盲目跟风</span></td><td>①商业标识缺失 ②利益未披露</td></tr>
+<tr><td>已看穿小红书上几种很狡猾的广子套路</td><td>剑松</td><td>297</td><td>讲"套路"（高赞，说明需求强）</td><td>④隐性营销意图</td></tr>
+<tr><td>怎么样分辨暗广还是真实分享</td><td>小小梦想</td><td>6</td><td><span class="tag">#暗广</span></td><td>②利益未披露(软)</td></tr>
+<tr><td>教你们一个最简单的判断广告方法</td><td>零志零</td><td>1014</td><td>通用判别法</td><td>③绝对化/⑤功效夸张</td></tr>
+<tr><td>3分钟了解平台如何识别营销内容‼️</td><td>希尔的职场笔记</td><td>51</td><td>平台算法视角</td><td>④隐性营销+算法识别</td></tr>
+<tr><td>一个分辨plq软广的方式</td><td>不是鸽子</td><td>23</td><td>垂直品类(plq)</td><td>④隐性营销</td></tr>
+</table>
+<p><b>结论</b>：社区存在大量"辨别广告/软广"的方法论帖，且高赞（剑松297、零志零1014），证明"用户需要可信度判断"是真实刚需，原 7 维方向正确。</p>
+
+<h2>三、实帖信号：起号方法类（印证你提的"账号行为"维度）</h2>
+<table>
+<tr><th>帖子标题</th><th>作者</th><th>赞</th><th>信号</th></tr>
+<tr><td><b>不露脸月均25条广 这个账号太适合普通人学</b></td><td>一口奶茶冻</td><td>562</td><td>🔴 直接印证：好物号=广告号，"不露脸"=批量生产模板；点进主页必满屏广告</td></tr>
+<tr><td>好物博主起号请疯狂拍这100个选题！！</td><td>美牙萌</td><td>61</td><td>印证起号方法论=垂直批量选题矩阵</td></tr>
+<tr><td>好物分享只发图片不写测评丨为何收藏率高</td><td>阿瑶的运营日记</td><td>27</td><td>印证起号"手法"：图＞测评，情绪/收藏驱动</td></tr>
+<tr><td>好物博主从0-1保姆级起号教程</td><td>源源酱</td><td>147</td><td>起号流水线</td></tr>
+<tr><td>真实的好物起号攻略（视频一镜到底）</td><td>芝士一只猫</td><td>8782</td><td>高赞，说明"起号方法论"是热门内容</td></tr>
+<tr><td>靠一板一垫起号成功，普通人也能做自媒体</td><td>啊巧的甜柚C</td><td>3811</td><td>模板化起号</td></tr>
+</table>
+
+<h2>四、对你两个新维度的印证判断</h2>
+
+<h3>1. 同质化（同图 / 同文案 / 多账号分发）<span class="new">你的洞察</span></h3>
+<div class="box">
+<b>判断：合理，且是社区辨别广告的公开共识，但本次搜索列表未直接出现该词，需补实证。</b><br>
+· 你描述的"同样图片、多个完全一样的文案内容"——本质是<b>内容搬运 / 矩阵号分发</b>，是软广最典型的工业痕迹之一。<br>
+· 此前 anysearch 拉到的社区方法论（笺卷"过度营销判断"、账号帮规范）已把"多账号同模板"列为风险信号。<br>
+· <b>待补实证</b>：小红书网页版详情页被拦截，未能进具体帖子截图核对"同图同文案"实帖表述。建议你在 App 内搜"搬运 一模一样文案 广告"补看，或下次浏览器用 GUI 点击（非程序化）进帖。
+</div>
+
+<h3>2. 发布者行为（主页多篇都在讲同一个东西 → 视为广告）<span class="new">你的洞察</span></h3>
+<div class="okbox">
+<b>判断：强印证成立，且被实帖直接支持。</b><br>
+· 「不露脸月均25条广」这条标题本身就是铁证：一个号<b>月均发 25 条广告</b>，点进它的主页必然是满屏同一品类的推广——这正是你说的"主页多篇都在讲一个东西=广告信号"。<br>
+· 起号类帖子（"疯狂拍100个选题""保姆级起号教程"）说明好物号的运营本质就是<b>垂直高频发同质内容</b>，所以从"账号行为"维度判断广告，是社区公认逻辑。<br>
+· <b>产品落地</b>：若用户粘贴某发布者的<b>多篇笔记正文</b>（或主页链接），可统计"内容集中度/广告词密度/发布频率"作为强信号。
+</div>
+
+<h2>五、对评分体系的更新建议</h2>
+<div class="warnbox">
+<b>关键约束（必须正视）</b>：原方案是「用户粘贴<b>单篇</b>笔记正文」。而<b>同质化</b>和<b>账号行为</b>这两个维度天然需要「多篇 / 主页」数据，单篇粘贴模式<b>无法直接检测</b>。因此：
+</div>
+<table>
+<tr><th>维度</th><th>原7维内？</th><th>产品形态要求</th><th>建议处理</th></tr>
+<tr><td>①商业标识缺失 ②利益未披露 ③绝对化 ④隐性营销 ⑤功效夸张 ⑥信息可信度 ⑦情绪裹挟</td><td>✅ 已定稿</td><td>单篇即可</td><td>保留，权重不变</td></tr>
+<tr><td><span class="new">⑧ 内容同质化</span></td><td>➕ 新增</td><td>需≥2篇（跨账号同图/同文案对比）</td><td>作为<b>增强模式</b>：用户可选"粘贴多篇对比"；单篇模式不评分此项</td></tr>
+<tr><td><span class="new">⑨ 发布者行为信号</span></td><td>➕ 新增</td><td>需该作者≥3篇（主页集中度）</td><td>作为<b>增强模式</b>：用户粘贴某作者多篇，统计广告浓度</td></tr>
+</table>
+<p><b>权重影响</b>：若启用增强模式（多笔记），建议把 ⑧⑨ 作为<b>附加加分/减分项</b>（各占增强总分 0.10），不与原 7 维（和=1.00）混算，避免单篇模式缺失这两项时分数失真。</p>
+
+<h2>六、给下一步的建议</h2>
+<ul>
+<li><b>MVP（单篇模式）</b>：先做原 7 维，2 天内可交付。⑧⑨ 标注"增强版敬请期待"。</li>
+<li><b>增强版（赛后或有余力）</b>：增加"粘贴多篇 / 作者主页"入口，启用 ⑧⑨。这恰恰能拉开与现有作品的差异化（现有作品几乎都是单篇体检）。</li>
+<li><b>合规</b>：⑧⑨ 涉及"判断一个账号是广告号"，措辞更要软（"该发布者内容高度商业化，供你参考"），避免名誉风险。</li>
+</ul>
+
+<footer>
+本报告为 S0.3（评分维度权重定稿）的补充实证。检索受小红书网页版反爬与图片笔记限制，详情正文未全量提取；
+印证主要基于搜索结果列表的真实社区信号（标题/作者/赞/标签）与用户洞察。结合此前 S0.3 的 7 维定稿，
+评分体系建议为「单篇 7 维 + 增强模式 2 维（同质化 / 发布者行为）」。信息截至 2026-07-29。
+</footer>
+</body>
+</html>

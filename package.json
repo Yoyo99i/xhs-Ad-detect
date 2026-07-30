@@ -1,0 +1,13 @@
+{
+  "name": "xhs-fanche-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "小红书种草翻车检测 - 后端转发服务(用 InfiniSynapse agent)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

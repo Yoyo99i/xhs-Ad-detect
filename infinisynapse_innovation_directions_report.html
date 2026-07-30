@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InfiniSynapse Vibe Coding · 创新方向 & SWOT 报告</title>
+<style>
+  :root{--bg:#f6f8fb;--card:#fff;--ink:#1f2933;--sub:#5b6671;--line:#e3e7ec;
+    --brand:#2f6df6;--brand2:#7c3aed;--ok:#0f9d58;--warn:#d97706;--bad:#ef4444;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.65;font-size:15px;}
+  .wrap{max-width:960px;margin:0 auto;padding:26px 20px 60px;}
+  header{background:linear-gradient(120deg,#2f6df6,#7c3aed);color:#fff;border-radius:16px;padding:24px 28px;margin-bottom:20px;}
+  header h1{margin:0 0 6px;font-size:22px;}
+  header p{margin:0;opacity:.92;font-size:13px;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
+  h2{font-size:18px;margin:0 0 12px;color:var(--brand);}
+  h3{font-size:15.5px;margin:14px 0 6px;color:var(--brand2);}
+  .plain{background:#f1f4f9;border-left:4px solid var(--brand);padding:12px 16px;border-radius:8px;font-size:14px;}
+  .dir{border:1px solid #e0e6f5;border-radius:12px;padding:16px 18px;margin:14px 0;background:#fbfcff;}
+  .dir h3{margin-top:0;}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px;}
+  th,td{border:1px solid var(--line);padding:7px 9px;vertical-align:top;text-align:left;}
+  th{background:#f1f4f9;font-weight:600;}
+  .swot{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+  .swot div{border-radius:8px;padding:8px 10px;font-size:12.5px;}
+  .s{background:#e7f7ee;} .w{background:#fff3e0;} .o{background:#e7f0ff;} .t{background:#fdeaea;}
+  .swot b{display:block;margin-bottom:3px;font-size:12px;}
+  .meta{font-size:12.5px;color:var(--sub);}
+  .tag{display:inline-block;background:var(--chip,#eef3ff);color:var(--brand);border-radius:6px;padding:1px 7px;font-size:11.5px;font-weight:600;}
+  .infer{background:#fef2f2;border-left:4px solid var(--bad);padding:10px 14px;border-radius:8px;margin:10px 0;font-size:13px;}
+  .infer b{color:#b91c1c;}
+  footer{font-size:12px;color:var(--sub);text-align:center;margin-top:22px;}
+  code{background:#f1f4f9;padding:1px 6px;border-radius:5px;font-size:12.5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>🧭 InfiniSynapse Vibe Coding · 创新方向 & SWOT 报告</h1>
+  <p>基于官方 10 选题 + 现有 16 个作品长廊，补充 10 个更创新方向；含"大白话比赛说明"与逐方向 SWOT</p>
+</header>
+
+<!-- 大白话 -->
+<section>
+  <h2>一、用大白话讲清楚：这个比赛要你做啥</h2>
+  <div class="plain">
+    <b>一句话</b>：做一个<b>能上线、真人能用、并且后台真在调用 InfiniSynapse 做数据分析</b>的小应用。不是 Demo 视频，不是 GitHub 丢仓库。
+    <br><br>
+    <b>三层结构</b>：① 前端一个输入框/上传框（网页/小程序/桌面都行）→ ② 后端把用户问题发给 <code>/v1/query</code> 让 InfiniSynapse 跑分析 → ③ 把结果画成表格/图表/报告返回。
+    <br><br>
+    <b>最关键的隐藏规则</b>：评分 <b>60% 看真实用户数和活跃调用量</b>（平台后台查得到），40% 看专家觉得你场景有价值、做得完整、有创新。所以"<b>有人真用</b>"比"功能多"重要得多。截止 <b>7/31 23:59</b>，现在约剩 3 天。
+  </div>
+</section>
+
+<!-- 创新方向总览 -->
+<section>
+  <h2>二、10 个更创新的方向（总览）</h2>
+  <table>
+    <tr><th>#</th><th>方向</th><th>一句话切口</th><th>耗时(我推断)</th></tr>
+    <tr><td>1</td><td>小红书"种草翻车"检测</td><td>反种草·可信度评分</td><td>1–1.5 天</td></tr>
+    <tr><td>2</td><td>招聘 JD"画饼"解码</td><td>拆公司话术·推真实薪资</td><td>1 天</td></tr>
+    <tr><td>3</td><td>家庭"隐形开支"审计</td><td>抓忘了退的会员</td><td>1–1.5 天</td></tr>
+    <tr><td>4</td><td>考研/考公"报录比地狱图"</td><td>竞争热力图</td><td>2 天</td></tr>
+    <tr><td>5</td><td>二手商品"值不值"鉴定</td><td>闲鱼/转转比价</td><td>1.5 天</td></tr>
+    <tr><td>6</td><td>情侣/合租"公平账单"仲裁</td><td>按权重算谁多付</td><td>1 天</td></tr>
+    <tr><td>7</td><td>小商家"差评自救"周报</td><td>差评体检的 B 端版</td><td>1.5 天</td></tr>
+    <tr><td>8</td><td>短视频"爆款公式"拆解</td><td>创作者逆向工程</td><td>1.5–2 天</td></tr>
+    <tr><td>9</td><td>城市"通勤幸福感"计算器</td><td>多城+情绪维度</td><td>2 天</td></tr>
+    <tr><td>10</td><td>个人"数字坟场"清理</td><td>隐私+极简情绪</td><td>1–1.5 天</td></tr>
+  </table>
+  <div class="infer"><b>我推断的选题逻辑</b>：创新 ≠ 技术炫技，而是<b>场景切口稀缺 + 用户没见过但马上想试</b>。因为 60% 分靠真实调用，一个"大家想试"的小工具比"技术华丽但没人用"更划算。下面 10 个按"场景稀缺 + 可一周末做"排，技术尽量轻。</div>
+</section>
+
+<!-- 逐方向详情 -->
+<section>
+  <h2>三、逐方向详解 + SWOT</h2>
+
+  <!-- 1 -->
+  <div class="dir">
+    <h3>方向 1 ｜ 小红书"种草翻车"检测助手</h3>
+    <p class="meta"><b>介绍</b>：贴链接或笔记文本 → 分析是否夸大宣传、有无绝对化用语、疑似软广，给"可信度评分 + 避坑清单"。<br>
+    <b>特点</b>：打"反种草"情绪，年轻人共鸣强、易传播。<br>
+    <b>预计耗时</b>：1–1.5 天（我推断，结构同差评体检）。<br>
+    <b>技术/数据</b>：前端上传/链接 → <code>/v1/query</code> 语义风险分类；数据用公开笔记样本或用户自贴文本。</p>
+    <div class="swot">
+      <div class="s"><b>现有作品 SWOT</b>省钱比价/财格：S 轻量好演示；W 未做"可信度"维度；O 情绪流量大；T 平台内容政策边界</div>
+      <div class="w"><b>本方向 SWOT</b>S 切口新、易病毒传播；W 需定义"翻车"标准；O 种草治理热点；T 误判引发争议</div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="dir">
+    <h3>方向 2 ｜ 招聘 JD"画饼"解码器</h3>
+    <p class="meta"><b>介绍</b>：贴 JD → 标出模糊承诺（"弹性""成长空间"）、推算真实薪资区间、提示加班/外包信号。<br>
+    <b>特点</b>：和"简历-JD 匹配"互补，专拆公司话术。<br>
+    <b>预计耗时</b>：1 天。<br>
+    <b>技术/数据</b>：JD 文本 → 规则+LLM 分类；公开 JD 做样本。</p>
+    <div class="swot">
+      <div class="s"><b>现有作品 SWOT</b>简历-JD匹配：S 刚需；W 只帮改简历不揭公司；O 求职季；T 同质化</div>
+      <div class="w"><b>本方向 SWOT</b>S 反向视角稀缺；W 话术库要积累；O 打工人爽点；T 公司方不适</div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="dir">
+    <h3>方向 3 ｜ 家庭"隐形开支"审计</h3>
+    <p class="meta"><b>介绍</b>：上传账单/订阅列表 → 找出"忘了退的会员""重复付费""小额累加"，算一年浪费多少。<br>
+    <b>特点</b>：从个人财务切到"订阅陷阱"，场景具体。<br>
+    <b>预计耗时</b>：1–1.5 天。<br>
+    <b>技术/数据</b>：账单/Excel → 分类聚合；示例数据集即可。</p>
+    <div class="swot">
+      <div class="s"><b>现有作品 SWOT</b>智析账本：S 已做消费结构；W 偏总览不戳痛点；O 订阅经济普遍；T 接真实账单有隐私顾虑</div>
+      <div class="w"><b>本方向 SWOT</b>S 痛点尖；W 数据获取门槛；O 年终复盘季；T 隐私</div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="dir">
+    <h3>方向 4 ｜ 考研/考公"报录比地狱图"</h3>
+    <p class="meta"><b>介绍</b>：输入专业/院校 → 拉公开招录数据，画竞争热力图，标注"卷王" vs "性价比"。<br>
+    <b>特点</b>：把"志愿填报"思路迁到考研考公，可视化强。<br>
+    <b>预计耗时</b>：2 天（数据清洗偏重）。<br>
+    <b>技术/数据</b>：公开招录/分数线 → 图表；需联网或预置数据集。</p>
+    <div class="swot">
+      <div class="s"><b>现有作品 SWOT</b>上岸参谋/高考助手：S 已验证；W 多聚焦高考；O 考研考公人群大；T 数据时效</div>
+      <div class="w"><b>本方向 SWOT</b>S 热力图直观；W 数据整合累；O 考试季；T 数据不准被喷</div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="dir">
+    <h3>方向 5 ｜ 二手商品"值不值"鉴定</h3>
+    <p class="meta"><b>介绍</b>：贴闲鱼/转转链接 → 比新货价、看成色评价、算折旧合理区间，给"入手建议"。<br>
+    <b>特点</b>：和"比价"互补，做二手垂直。<br>
+    <b>预计耗时</b>：1.5 天。<br>
+    <b>技术/数据</b>：商品页抓取/用户贴参数 → 比价+评价挖掘。</p>
+    <div class="swot">
+      <div class="s"><b>现有作品 SWOT</b>省钱比价/商品侦探：S 成熟；W 偏新品；O 二手交易火；T 平台反爬</div>
+      <div class="w"><b>本方向 SWOT</b>S 垂直细分；W 成色难量化；O 性价比焦虑；T 反爬</div>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="dir">
+    <h3>方向 6 ｜ 情侣/合租"公平账单"仲裁</h3>
+    <p class="meta"><b>介绍</b>：导入共同开销 → 按自定义权重（收入/usage）算谁该多付，出"和睦建议"。<br>
+    <b>特点</b>：生活决策里的"冲突场景"，有话题性。<br>
+    <b>预计耗时</b>：1 天。<br>
+    <b>技术/数据</b>：账单 → 权重计算+自然语言建议。</p>
+    <div class="swot">
+      <div class="s"><b>现有作品 SWOT</b>LifeFlow/析数/决策打分：S 决策类多；W 少做"人际冲突"；O 合租情侣刚需；T 权重主观</div>
+      <div class="w"><b>本方向 SWOT</b>S 情感传播点；W 易引争议；O 社交媒体好料；T 主观性</div>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="dir">
+    <h3>方向 7 ｜ 小商家"差评自救"周报</h3>
+    <p class="meta"><b>介绍</b>：商家贴店铺评价 → 每周自动出"差评聚类+改进动作+话术模板"。<br>
+    <b>特点</b>：把"差评体检"从消费者视角翻到商家视角，B 端轻量。<br>
+    <b>预计耗时</b>：1.5 天。<br>
+    <b>技术/数据</b>：评价文本 → 聚类+建议生成；可手动贴。</p>
+    <div class="swot">
+      <div class="s"><b>现有作品 SWOT</b>店铺差评体检：S 已验证框架；W 偏买家；O 小商家多；T 需持续数据</div>
+      <div class="w"><b>本方向 SWOT</b>S 视角反转；W 商家获客难；O 私域运营热；T 留存</div>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="dir">
+    <h3>方向 8 ｜ 短视频"爆款公式"拆解</h3>
+    <p class="meta"><b>介绍</b>：贴视频链接/文案 → 拆结构（钩子/节奏/槽点），给"复制建议"。<br>
+    <b>特点</b>：内容创作者的"逆向工程"工具。<br>
+    <b>预计耗时</b>：1.5–2 天。<br>
+    <b>技术/数据</b>：视频文案/字幕 → 结构标注；示例用公开视频。</p>
+    <div class="swot">
+      <div class="s"><b>现有作品 SWOT</b>语感工坊/财格：S 创作向有；W 少做视频结构；O 短视频创作者海量；T 平台规则变</div>
+      <div class="w"><b>本方向 SWOT</b>S 创作者痛点；W 公式主观；O 知识付费联动；T 易过时</div>
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="dir">
+    <h3>方向 9 ｜ 城市"通勤幸福感"计算器</h3>
+    <p class="meta"><b>介绍</b>：输入起点终点/预算 → 算通勤时间成本+房租权衡+宜居评分，出"搬不搬"建议。<br>
+    <b>特点</b>：把"广佛租房通勤"升级为多城市通用+幸福感维度。<br>
+    <b>预计耗时</b>：2 天（地图/租金数据整合）。<br>
+    <b>技术/数据</b>：租房+地图+薪资数据 → 多维评分；可用示例数据集。</p>
+    <div class="swot">
+      <div class="s"><b>现有作品 SWOT</b>住哪儿/租房通勤：S 已验证；W 单城市；O 跨城流动大；T 数据杂</div>
+      <div class="w"><b>本方向 SWOT</b>S 多城+情绪维度；W 数据重；O 换城季；T 整合成本</div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="dir">
+    <h3>方向 10 ｜ 个人"数字坟场"清理助手</h3>
+    <p class="meta"><b>介绍</b>：导出各平台订阅/账号清单 → 标出"早不用却仍在扣费/泄露风险"的账号，给注销指引。<br>
+    <b>特点</b>：隐私+极简主义情绪，2026 热门议题。<br>
+    <b>预计耗时</b>：1–1.5 天。<br>
+    <b>技术/数据</b>：清单/截图 → 风险标注；用户自填为主。</p>
+    <div class="swot">
+      <div class="s"><b>现有作品 SWOT</b>智析账本/隐私类少：S 隐私赛道空白；W 需用户整理；O 数据隐私焦虑升；T 跨平台难自动</div>
+      <div class="w"><b>本方向 SWOT</b>S 情绪+空白；W 需用户整理；O 隐私焦虑；T 跨平台自动难</div>
+    </div>
+  </div>
+</section>
+
+<!-- 总体策略 -->
+<section>
+  <h2>四、总体策略建议（我推断是）</h2>
+  <ul>
+    <li><b>冲奖优先级</b>：剩 3 天，优先"一天可完成"的 <b>方向 2 / 6</b>（结构最简单、demo 数据好找）；想冲名次选 <b>方向 1 / 7 / 3</b>（情绪传播强，易拉真实用户）。</li>
+    <li><b>避开红海</b>：比价/尽调/高考已有成熟作品，新做需强差异化（如方向 5 二手、方向 4 考研考公）。</li>
+    <li><b>真实用户是命门</b>：每个方向上线后，立刻让 5–10 个真实朋友试用并触发 API 调用——这直接喂饱 60% 的用户指标分。</li>
+    <li><b>技术克制</b>：全部走"前端输入 → <code>/v1/query</code> → 表格/报告"骨架，别堆多智能体；用 Vercel/OnRender 免费拿公网 URL。</li>
+  </ul>
+  <div class="infer"><b>我推断的"创新"定义</b>：在评分机制下，创新 = <b>稀缺场景 × 真实可用 × 轻量可交付</b>，而非技术复杂度。上面 10 个都按此筛选，任意挑一个切垂直都能在 3 天内交卷。</div>
+</section>
+
+<footer>
+  本报告由 UX Researcher 视角整理：创新方向基于官方 10 选题与现有 16 作品长廊的差异分析；SWOT 中"现有作品"指已上线参赛作品，"本方向"指建议方向。
+  耗时与策略含"我推断是"标注，仅供参考。生成于 2026-07-28。
+</footer>
+
+</div>
+</body>
+</html>

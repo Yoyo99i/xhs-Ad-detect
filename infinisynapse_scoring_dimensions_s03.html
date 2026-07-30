@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>种草翻车检测 · 评分维度权重定稿（S0.3）</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2329; --sub:#5b6168;
+    --line:#e6e8eb; --brand:#ff2e4d; --brand-soft:#fff0f2;
+    --ok:#0a8f3c; --warn:#c47f00; --info:#1f6feb; --info-soft:#eef4ff;
+    --new:#7c3aed; --new-soft:#f3ecff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,Roboto,sans-serif;
+    line-height:1.7;font-size:15px}
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 64px}
+  header{background:linear-gradient(135deg,#ff2e4d,#ff6a3d);color:#fff;border-radius:16px;padding:26px 28px;margin-bottom:22px}
+  header h1{margin:0 0 6px;font-size:23px}
+  header p{margin:0;opacity:.95;font-size:14px}
+  h2{font-size:19px;margin:30px 0 12px;padding-left:10px;border-left:4px solid var(--brand)}
+  h3{font-size:16px;margin:20px 0 8px;color:var(--brand)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+  th{background:var(--info-soft);font-weight:700}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-right:4px}
+  .t-src{background:var(--info-soft);color:var(--info)}
+  .t-new{background:var(--new-soft);color:var(--new)}
+  .t-yes{background:#e8f7ee;color:var(--ok)}
+  .t-no{background:var(--brand-soft);color:var(--brand)}
+  .dim{border-left:4px solid var(--brand);background:var(--brand-soft);padding:12px 14px;border-radius:8px;margin:10px 0}
+  .dim b{color:var(--brand)}
+  .evi{background:var(--info-soft);border-radius:8px;padding:8px 12px;margin:6px 0;font-size:13px;color:#22324a}
+  .src{font-size:12px;color:var(--sub);margin-top:4px}
+  .why{background:#fffdf3;border:1px solid #f1e3b0;border-radius:8px;padding:10px 12px;margin:8px 0}
+  .todo{background:#fff;border:1px dashed var(--brand);border-radius:8px;padding:12px 14px;margin:10px 0}
+  .pill{display:inline-block;background:var(--ink);color:#fff;font-size:11px;padding:1px 7px;border-radius:10px;margin-right:5px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  code{background:#f0f2f5;padding:1px 5px;border-radius:4px;font-size:13px}
+  footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--sub)}
+  .warnbox{background:#fff4f4;border:1px solid #ffd0d0;border-radius:10px;padding:12px 14px;color:#8a1f1f}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>小红书「种草翻车」检测 · 评分维度权重定稿</h1>
+  <p>S0.3 交付物 ｜ 行业场景研究员 + UX 研究员 ｜ 基于 原构想 + 学术 + 法规 + 社区实操 四路对齐 ｜ 2026-07-29</p>
+</header>
+
+<div class="warnbox">
+  ⚠️ <b>Web Access 实帖路线未做</b>：你浏览器未开远程调试（硬门槛），无法读取已登录小红书上的实帖与好物账号起号方法论。本报告用 anysearch 拉取的<b>公开第三方社区经验</b>（账号帮 2026 规范、CBNData 反种草访谈、笺卷凌烟阁辨别清单）补足"用户视角"一路，并明确标注。等你浏览器开启调试后，可补一轮实帖校验。
+</div>
+
+<h2>一、原构想 6 维度 vs 三路来源对照</h2>
+<div class="card">
+  <p>原构想（评审严谨度抓手）：<b>绝对化 / 功效夸张 / 软广 / 证据缺失 / 利益未披露 / 情绪裹挟</b>。下面把每一维与来源对齐，看谁支持、谁补充、谁需要调整。</p>
+  <table>
+    <tr><th>原维度</th><th>学术侧支持</th><th>法规侧支持（硬出处）</th><th>社区实操支持</th><th>结论</th></tr>
+    <tr>
+      <td>绝对化</td>
+      <td>广告法禁用词研究；内容真实性维度(韩荣雪2026)</td>
+      <td><b>《广告法》+《互联网广告管理办法》第9条</b>禁止"最好/第一/包治"等绝对化用语</td>
+      <td>账号帮2026：红线4"表达方式"明确列绝对化宣传</td>
+      <td class="t-yes">保留并升权</td>
+    </tr>
+    <tr>
+      <td>功效夸张</td>
+      <td>多模态商业内容同质化/过度美化研究(洪傲然2026)</td>
+      <td>办法第8条禁止变相发布疗效；医美"7天美白"等无依据宣称</td>
+      <td>CBNData：滤镜景点/平价替代踩坑；笺卷：完美到失真=说明书式</td>
+      <td class="t-yes">保留</td>
+    </tr>
+    <tr>
+      <td>软广</td>
+      <td>ELM模型边缘路径(依赖表面线索)(张苗2025)</td>
+      <td><b>办法第9条第3款</b>：体验分享+购物链接=应标"广告"；商单无原罪但须标识</td>
+      <td>红草/账号帮：软广判定4维度(表现形式/披露/真实性/互动)</td>
+      <td class="t-yes">保留（改名"隐性营销意图"更准）</td>
+    </tr>
+    <tr>
+      <td>证据缺失</td>
+      <td>产品信息量正向影响有用性(沈娇娇2024,Word2Vec+TFIDF)</td>
+      <td>办法第13条：广告主对内容真实性负责，引证内容需有据</td>
+      <td>笺卷：缺场景/个人体验=营销浓度高</td>
+      <td class="t-yes">保留（扩为"信息密度/证据"）</td>
+    </tr>
+    <tr>
+      <td>利益未披露</td>
+      <td>—（学术少直接谈）</td>
+      <td><b>办法第9条 + 账号帮2026红线3</b>：收钱/免费产品置换均须标"合作/广告"</td>
+      <td>CBNData：暗广；笺卷：没标≠不是广告</td>
+      <td class="t-yes">保留并升权（法规最硬）</td>
+    </tr>
+    <tr>
+      <td>情绪裹挟</td>
+      <td>社会临场感/情感倾向正向影响(韩荣雪2026；H2正向情感有用性)</td>
+      <td>办法第11条：不得以虚假奖励承诺等欺骗误导</td>
+      <td>CBNData：情感绑架式软广；"闺蜜推荐/心疼妈妈"套路</td>
+      <td class="t-yes">保留</td>
+    </tr>
+  </table>
+  <p class="src">学术来源：汉斯出版社《电子商务评论》2025–2026 多篇（ELM模型/种草机制/多模态商业内容）；法规来源：国家市场监督管理总局《互联网广告管理办法》（2023-5-1施行，中国政府网 gov.cn 一手）；社区来源：账号帮2026社区规范、CBNData反种草访谈、笺卷凌烟阁辨别清单、红草笔记运营系统。</p>
+</div>
+
+<h2>二、三路来源带来的「新增 / 修正」</h2>
+
+<div class="card">
+  <h3>1. 新增维度：<span class="tag t-new">新增</span>「商业标识合规性」<span class="pill">来自法规</span></h3>
+  <div class="evi">《互联网广告管理办法》第9条第3款：通过体验分享/消费测评推销商品+附加购物链接等购买方式→应显著标明"广告"。账号帮2026红线3：收任何形式报酬（含免费产品）须加标签。</div>
+  <p><b>为什么加</b>：原"利益未披露"偏"是否收钱"，但法规更关注"有没有标"。一篇笔记即使你不知道它收没收钱，只要它带购物链接却没标"广告"，就<b>违法且可识别</b>。这是模型最容易从文本抓到的硬信号（链接+无标识），应单列。</p>
+  <p><b>处理</b>：将原"利益未披露"拆为两层——① 利益未披露（是否暗示合作/收赠品，软信号）；② 商业标识缺失（有链接无标识，硬信号，权重更高）。</p>
+</div>
+
+<div class="card">
+  <h3>2. 新增维度：<span class="tag t-new">新增</span>「数据/互动真实性」<span class="pill">来自社区</span></h3>
+  <div class="evi">CBNData反种草访谈：时间接近、字数多、无错别字的评价大概率是刷的；笺卷：收藏/点赞比异常、评论区复制粘贴式提问=水军控评；账号帮红线6：数据造假限流。</div>
+  <p><b>为什么加</b>：用户判断"翻车"不止看文案，还看"这笔记可信度是否被刷出来"。虽然单篇文本难抓互动数据，但可从<b>评论区文本特征</b>（如请求式雷同提问）做轻量信号，作为可选增强。优先级低于前几项。</p>
+</div>
+
+<div class="card">
+  <h3>3. 修正：原"软广"→重命名为「隐性营销意图」</h3>
+  <p>学术(ELM边缘路径)与法规都表明：软广的本质是<b>商业意图隐蔽</b>，而非"像不像广告"。改名后涵盖：无标识的利益导向、场景化软植、情感绑架式推销。与原"利益未披露/商业标识缺失"形成递进（意图→未披露→未标识）。</p>
+</div>
+
+<div class="card">
+  <h3>4. 修正：原"证据缺失"→扩为「信息可信度/证据密度」</h3>
+  <p>学术证明产品信息量正向影响有用性(沈娇娇2024)，但过度堆参数反而像推广(洪傲然2026)。所以判据改为：<b>有无真实使用场景+个人化体验+可核验信息</b>，而非"字数多"。</p>
+</div>
+
+<h2>三、最终 7 维度权重定稿</h2>
+<div class="card">
+  <p>评分逻辑：单篇笔记按 7 维度各给「轻0.5 / 中1 / 重1.5」严重度，加权求和 → 映射 0–100「可信度分」（分越低越疑似翻车）。权重反映<b>法规硬度 × 用户踩坑频率 × 模型可检测性</b>。</p>
+  <table>
+    <tr><th>#</th><th>维度</th><th>权重</th><th>严重度档</th><th>核心判据（一句话）</th><th>主要出处</th></tr>
+    <tr><td>1</td><td><b>商业标识缺失</b></td><td><b>0.22</b></td><td>轻/中/重</td><td>带购物链接/优惠码但无"广告/合作"标识</td><td>办法§9(3)；账号帮红线3</td></tr>
+    <tr><td>2</td><td><b>利益未披露（软信号）</b></td><td><b>0.18</b></td><td>轻/中/重</td><td>暗示品牌合作/收赠品/置换却未声明</td><td>办法§9；CBNData暗广</td></tr>
+    <tr><td>3</td><td><b>绝对化用语</b></td><td><b>0.16</b></td><td>轻/中/重</td><td>"最好/第一/包治/封神"等禁用词</td><td>广告法；办法§9；账号帮红线4</td></tr>
+    <tr><td>4</td><td><b>隐性营销意图</b></td><td><b>0.14</b></td><td>轻/中/重</td><td>场景化软植/情感绑架/只讲优点无缺点</td><td>ELM边缘路径；笺卷70/30法则</td></tr>
+    <tr><td>5</td><td><b>功效夸张/无依据宣称</b></td><td><b>0.12</b></td><td>轻/中/重</td><td>"7天美白/立竿见影"等无时效证据</td><td>办法§8；账号帮医美红线</td></tr>
+    <tr><td>6</td><td><b>信息可信度/证据密度</b></td><td><b>0.10</b></td><td>轻/中/重</td><td>缺真实场景/个人体验/可核验信息</td><td>沈娇娇2024；洪傲然2026</td></tr>
+    <tr><td>7</td><td><b>情绪裹挟</b></td><td><b>0.08</b></td><td>轻/中/重</td><td>焦虑制造/虚假奖励承诺/情感绑架</td><td>办法§11；CBNData情感绑架</td></tr>
+  </table>
+  <p class="why"><b>权重理由</b>：① 标识缺失(0.22)+利益未披露(0.18)合计 0.40，因为《互联网广告管理办法》是最硬法规依据、且平台算法最易识别（链接+标识），用户对"没标广告"也最敏感；② 绝对化(0.16)是广告法明示禁用词，检测成本低、误判少，给高权；③ 隐性营销(0.14)/功效夸张(0.12)是"软广"核心，但需语义理解、易争议，居中；④ 证据密度(0.10)/情绪裹挟(0.08)偏软信号，作辅助加权，避免单一情绪词就重判。</p>
+  <p class="src">权重和为 1.00。严重度系数：轻=0.5，中=1.0，重=1.5。单维得分=权重×严重度；总分=Σ单维得分（已归一化到0–100，100=无风险）。</p>
+</div>
+
+<h2>四、证据句模板（给 InfiniSynapse 的 prompt 用）</h2>
+<div class="card">
+  <p>每个维度配 1–2 条"证据句"模板，模型输出时必须引用原文片段，避免空判。示例：</p>
+  <div class="dim"><b>① 商业标识缺失</b>：笔记含"🔗主页有/私我/优惠码XXX"等购买引导，但未出现"广告/合作/赞助/品牌合作"任一标识 → 证据："……主页有同款……"</div>
+  <div class="dim"><b>② 利益未披露</b>：出现"感谢品牌方寄送/免费试用/品牌方大大"等收受表述，无合作标识 → 证据："……品牌方寄来的……"</div>
+  <div class="dim"><b>③ 绝对化用语</b>：命中绝对化词表（最好/第一/全网/封神/一生推/包治）→ 证据："……绝对最好用……"</div>
+  <div class="dim"><b>④ 隐性营销意图</b>：全文只讲优点、无任一缺点，或"闺蜜推荐/心疼妈妈"式情感故事包裹单一产品 → 证据："……这款真的救了我……"</div>
+  <div class="dim"><b>⑤ 功效夸张</b>：出现时效/效果绝对宣称且无依据（"7天""立竿见影""根治"）→ 证据："……一周白三个度……"</div>
+  <div class="dim"><b>⑥ 信息可信度</b>：无个人使用场景/实拍描述，纯参数罗列或复制粘贴感 → 证据："……成分表如下……"</div>
+  <div class="dim"><b>⑦ 情绪裹挟</b>：制造焦虑（"不买就亏/错过等一年"）或虚假奖励引导 → 证据："……限时不买没了……"</div>
+</div>
+
+<h2>五、prompt 草稿定稿（喂给 /v1/query 的 query 字段）</h2>
+<div class="card">
+  <p>结合自建 RAG 知识库（装《互联网广告管理办法》§9、广告法禁用词表、账号帮2026规范），prompt 结构如下：</p>
+  <pre style="background:#0f1115;color:#e6edf3;padding:14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.55"><code>你是一个「小红书种草笔记可信度审核员」。请基于所附知识库（互联网广告管理办法、广告法禁用词、平台社区规范），
+对下面这篇用户粘贴的笔记文本，按 7 个维度逐一判定：
+1.商业标识缺失 2.利益未披露 3.绝对化用语 4.隐性营销意图 5.功效夸张 6.信息可信度 7.情绪裹挟
+
+对每个命中的维度：
+- 给严重度：轻(0.5)/中(1)/重(1.5)
+- 引用原文证据句（必须来自文本，不得编造）
+- 说明判定依据（对应法规条款或规范条目，若适用）
+
+最后输出：
+- 各维度 {维度:严重度}
+- 综合可信度分（0–100，100=无风险，越低越疑似翻车/软广）
+- 一句话结论（用"疑似营销话术浓度"表述，不得下"这是广告"定性结论）
+- 给用户的温和提示（如"该笔记未标识广告，按《互联网广告管理办法》应标明"）
+
+【重要合规约束】
+- 不输出任何定性法律结论，仅提供"疑似/浓度"参考
+- 所有判断须附原文证据
+- 文末固定附："本结果由AI生成，仅供参考，不构成官方认定，请以平台与监管判定为准"
+
+笔记文本如下：
+"""{{NOTE_TEXT}}"""</code></pre>
+  <p class="src">注：<code>{{NOTE_TEXT}}</code> 由前端替换为用户粘贴内容；data_source 传自建知识库 ID。具体响应字段待 S1.4 用真实 Key 跑通后补全。</p>
+</div>
+
+<h2>六、来源出处汇总（评审可直接引用）</h2>
+<div class="card">
+  <table>
+    <tr><th>类型</th><th>来源</th><th>关键内容</th><th>URL/出处</th></tr>
+    <tr><td>法规（一手）</td><td>《互联网广告管理办法》市场监管总局令第72号</td><td>§9 可识别性；§9(3)体验分享+购物链接应标广告；§8 禁变相疗效；§11 禁欺骗误导</td><td>gov.cn/zhengce/202305/content_6858084.htm</td></tr>
+    <tr><td>法规解读</td><td>环球/金杜律所解读</td><td>"商单无原罪但须标识"；有无购物链接是区分边界</td><td>glo.com.cn / kingandwood.com</td></tr>
+    <tr><td>学术</td><td>韩荣雪. 小红书内容种草影响机制. 电商评论2026</td><td>ELM/信任理论；内容特征+来源可信度</td><td>doi:10.12677/ecl.2026.156688</td></tr>
+    <tr><td>学术</td><td>洪傲然等. 生成式AI多模态商业内容. 心理学报2026</td><td>过度美化/同质化降低可信；多模态特征维度</td><td>journal.psych.ac.cn/10.3724/SP.J.1042.2026.0836</td></tr>
+    <tr><td>学术</td><td>沈娇娇等. ELM下UGC有用性. 现代商业2024</td><td>产品信息量正向影响有用性(Word2Vec+TFIDF)</td><td>xdsyzzs.com/dianzishangwu/8761</td></tr>
+    <tr><td>学术</td><td>张苗. 种草笔记形式与产品类型. 电商评论2025</td><td>ELM边缘路径=依赖表面线索</td><td>doi:10.12677/ecl.2025.1472389</td></tr>
+    <tr><td>社区规范</td><td>账号帮. 小红书社区内容规范2026</td><td>7大红线；真实体验核查/AI标注/商业披露/绝对化/数据造假</td><td>zhanghaobang.cn/policy/xiaohongshu-content-policy-2026</td></tr>
+    <tr><td>社区实操</td><td>CBNData. 年轻人开始"反种草"了</td><td>反软广套路：关键词+避坑/查黑历史/看评价真实性</td><td>cbndata.com/information/208424</td></tr>
+    <tr><td>社区实操</td><td>笺卷凌烟阁. 过度营销判断/品牌合作边界</td><td>70/30法则；控评痕迹；标识显著性</td><td>520zimeiti.cn/44126, 47032</td></tr>
+    <tr><td>平台运营</td><td>红草笔记. 软广硬广判定标准</td><td>4维度：表现形式/披露/真实性/互动行为</td><td>redcao.com/archives/37449</td></tr>
+  </table>
+  <p class="warn"><b>待补（Web Access 实帖）</b>：你已登录小红书上的"辨别广告推文"实帖 + 好物分享账号起号方法论（可能含辨别广告章节）。需浏览器开远程调试后由我实拉校验，看是否对权重有修正。</p>
+</div>
+
+<footer>
+  本报告为 S0.3 交付物，配合 <code>infinisynapse_xiaohongshu_fanche_report.html</code>（项目总报告）与 <code>infinisynapse_exec_plan_cn.html</code>（执行清单）使用。<br>
+  行业场景研究员 + UX 研究员 基于 原构想6维 + 学术(知网/汉斯出版社) + 法规(互联网广告管理办法) + 社区实操(账号帮/CBNData/笺卷/红草) 四路对齐定稿。<br>
+  Web Access 实帖路线因浏览器未开远程调试暂未执行，已用公开第三方来源补足并标注；如开启调试可补做一轮校验。信息截至 2026-07-29。
+</footer>
+
+</div>
+</body>
+</html>
