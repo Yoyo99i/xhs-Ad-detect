@@ -189,7 +189,12 @@
     .verdict-hero .vh-text { min-width: 0; }
     .verdict-hero .vh-title { font-size: 15px; font-weight: 700; color: var(--ink); }
     .verdict-hero .vh-concl { font-size: 13px; color: var(--gray); margin-top: 3px; line-height: 1.6; }
-    .verdict-hero.lv-high { border-color: #ffd0d7; }
+    .verdict-hero.lv-high {
+      background: linear-gradient(135deg, #ff5a73, var(--red));
+      border-color: var(--red);
+    }
+    .verdict-hero.lv-high .vh-title { color: #fff; }
+    .verdict-hero.lv-high .vh-concl { color: rgba(255,255,255,.92); }
     .verdict-hero.lv-mid { background: #fff7ed; border-color: #fbbf24; }
     .verdict-hero.lv-mid .vh-title { color: #9a3412; }
     .verdict-hero.lv-mid .vh-concl { color: #78350f; }
@@ -293,22 +298,6 @@
     }
     #toast.show { opacity: 1; bottom: 96px; }
 
-    /* 分享区占位说明（首次进入/无结果时显示，解释白框用途） */
-    .share-section-title {
-      margin-top: 34px; padding-top: 22px; border-top: 1px dashed var(--line);
-      font-size: 15px; font-weight: 700; color: var(--ink);
-    }
-    .share-placeholder {
-      margin-top: 12px;
-    }
-    .share-placeholder .ph-card {
-      background: #fff; border: 1px dashed var(--line); border-radius: 18px;
-      padding: 30px 22px; text-align: center; color: var(--gray);
-    }
-    .share-placeholder .ph-icon { font-size: 28px; margin-bottom: 8px; }
-    .share-placeholder .ph-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-    .share-placeholder .ph-desc { font-size: 13px; line-height: 1.6; }
-
     /* P2 隐私告知弹层 */
     .modal-mask {
       position: fixed; inset: 0; background: rgba(0,0,0,.5);
@@ -352,19 +341,9 @@
     .form-field textarea:focus { outline: none; border-color: var(--red); }
     .form-field textarea { resize: vertical; }
 
-    /* ===== 复制检测结果（合规：不再生成带网址的分享图） ===== */
-    .share-wrap { margin-top: 12px; display: none; }
-    .share-actions { display: flex; gap: 10px; margin-top: 12px; }
-    .share-actions button {
-      flex: 1; padding: 11px; border-radius: 12px; font-size: 14px; cursor: pointer;
-      border: 1px solid var(--red); background: var(--red); color: #fff;
-    }
-    .share-actions button.ghost { background: #fff; color: var(--red); }
-    .share-actions button:disabled { opacity: .6; cursor: default; }
-
     /* ===== 评分维度说明：占卜卡 coverflow ===== */
     .dim-band {
-      margin-top: 26px;
+      margin-top: 18px;
       background: #fff;
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -382,7 +361,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 340px;
+      height: 380px;
       margin-top: 8px;
       perspective: 1200px;
       overflow: hidden;
@@ -397,13 +376,13 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 188px;
-      height: 286px;
-      margin-left: -94px;
-      margin-top: -143px;
+      width: 200px;
+      height: 318px;
+      margin-left: -100px;
+      margin-top: -159px;
       background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 14px 14px 16px;
       box-sizing: border-box;
       box-shadow: 0 8px 18px rgba(20, 20, 40, 0.10);
@@ -417,16 +396,25 @@
       user-select: none;
     }
     .ds-card.is-center { border-color: #ffd0d8; box-shadow: 0 20px 44px rgba(255, 46, 77, 0.18); }
-    .ds-card .dc-accent { height: 5px; border-radius: 3px; margin-bottom: 10px; flex: none; }
-    .ds-card .dc-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-    .ds-card .dc-title { font-weight: 700; font-size: 14px; color: var(--ink); line-height: 1.3; }
+    .ds-card .dc-accent { height: 5px; border-radius: 3px; margin-bottom: 9px; flex: none; }
+    .ds-card .dc-head { display: flex; align-items: center; gap: 6px; }
+    .ds-card .dc-icon { font-size: 18px; line-height: 1; }
+    .ds-card .dc-title { font-weight: 700; font-size: 14px; color: var(--ink); line-height: 1.3; flex: 1; }
     .ds-card .dc-badge { flex: none; font-size: 11px; font-weight: 600; color: #fff; padding: 2px 8px; border-radius: 999px; }
-    .ds-card .dc-desc { font-size: 12px; color: #555; line-height: 1.65; margin-top: 10px; flex: 1; overflow: hidden; }
-    .ds-card .dc-chart { display: flex; flex-direction: column; align-items: center; margin: 6px 0 4px; }
-    .ds-card .dc-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; width: 100%; margin-top: 8px; font-size: 10.5px; }
+    .ds-card .dc-triggers { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; min-height: 22px; }
+    .ds-card .dc-triggers span { font-size: 10px; padding: 2px 7px; border-radius: 999px; font-weight: 500; }
+    .ds-card .dc-example { font-size: 11px; color: #555; background: #f6f7f9; padding: 7px 9px; border-radius: 9px; margin-top: 8px; line-height: 1.55; }
+    .ds-card .dc-example b { color: var(--ink); font-weight: 600; }
+    .ds-card .dc-desc { font-size: 11.5px; color: #555; line-height: 1.6; margin-top: 8px; flex: 1; overflow: hidden; }
+    .ds-card .dc-bar { height: 5px; background: #f0f0f0; border-radius: 999px; overflow: hidden; margin-top: 10px; flex: none; }
+    .ds-card .dc-bar-fill { height: 100%; border-radius: 999px; }
+    .ds-card .dc-chart { display: flex; flex-direction: column; align-items: center; margin: 4px 0 2px; }
+    .ds-card .dc-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; width: 100%; margin-top: 6px; font-size: 10px; }
     .ds-card .dc-legend span { display: flex; align-items: center; gap: 4px; color: #444; }
-    .ds-card .dc-legend i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-    .ds-card .dc-intro { font-size: 12px; color: #555; line-height: 1.6; margin-top: 6px; }
+    .ds-card .dc-legend i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+    .ds-card .dc-intro { font-size: 11.5px; color: #555; line-height: 1.6; margin-top: 5px; }
+    .ds-card .dc-levels { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .ds-card .dc-levels span { font-size: 10px; padding: 2px 7px; border-radius: 999px; font-weight: 500; }
     .ds-arrows { display: flex; justify-content: center; gap: 14px; margin-top: 6px; }
     .ds-arrows button {
       width: 38px; height: 38px; border-radius: 50%;
@@ -471,14 +459,20 @@
       .modal-card { padding: 18px 16px 16px; min-height: auto; max-height: 90vh; }
       .modal-card h2 { font-size: 16px; }
       .modal-body { font-size: 13px; }
-      .share-actions { flex-direction: column; }
-      .share-actions button { width: 100%; }
       #disclaimer { font-size: 11px; padding-top: 12px; }
       .demo-btns button { font-size: 12px; padding: 5px 10px; }
       .dim-name { font-size: 13px; }
       .dim-evi, .dim-note { font-size: 12px; }
       #waiting-tips { padding: 12px 14px; font-size: 12px; }
       #waiting-tips .tip-head { font-size: 13px; }
+      .ds-card { width: 164px; height: 268px; margin-left: -82px; margin-top: -134px; padding: 12px; border-radius: 14px; }
+      .ds-card .dc-title { font-size: 13px; }
+      .ds-card .dc-triggers { gap: 4px; margin-top: 6px; }
+      .ds-card .dc-triggers span { font-size: 9px; padding: 1px 5px; }
+      .ds-card .dc-example { font-size: 10px; padding: 5px 7px; margin-top: 6px; }
+      .ds-card .dc-desc { font-size: 10.5px; margin-top: 6px; }
+      .ds-coverflow { height: 320px; }
+      .ds-arrows button { width: 32px; height: 32px; }
     }
 
     /* 动效偏好：尊重 prefers-reduced-motion */
@@ -530,6 +524,22 @@
     <div class="meta"><span>笔记正文字数限制 5000 字 · 仅用于本次分析，不存储、不用于训练</span><span id="counter">0 / 5000 字</span></div>
 
     <button id="btn">开始检测</button>
+
+    <aside class="dim-band" aria-label="评分维度说明">
+      <div class="db-head">
+        <span class="db-title">🧮 评分维度说明</span>
+        <span class="db-sub">点卡片或箭头，让每张「占卜卡」转到 C 位</span>
+      </div>
+      <div class="ds-coverflow">
+        <div class="ds-stage" id="ds-stage"></div>
+      </div>
+      <div class="ds-arrows">
+        <button id="ds-prev" aria-label="上一张">‹</button>
+        <button id="ds-next" aria-label="下一张">›</button>
+      </div>
+      <div class="ds-dots" id="ds-dots"></div>
+    </aside>
+
     <div id="status" aria-live="polite" role="status"></div>
     <div id="waiting-tips" style="display:none" aria-hidden="true"></div>
 
@@ -546,20 +556,6 @@
       </details>
     </div>
 
-    <div class="share-section-title">📋 复制检测结果</div>
-    <div id="share-placeholder" class="share-placeholder">
-      <div class="ph-card">
-        <div class="ph-icon">🌱</div>
-        <div class="ph-title">检测完成后，可复制文字结果</div>
-        <div class="ph-desc">把纯文本结果粘贴到任意平台分享，也可自行截图保存。</div>
-      </div>
-    </div>
-    <div id="share-wrap">
-      <div class="share-actions">
-        <button id="btn-copy-text" class="ghost">📋 复制文字结果</button>
-      </div>
-    </div>
-
     <div id="disclaimer">
       <b>免责声明</b>：本工具基于 AI 对文本进行软广 / 营销话术浓度识别，所有结果仅供个人参考，不构成官方认定、平台判定或法律结论，亦不构成对任何笔记内容真实性、合法性或商业属性的认定。
       本工具不存储、不训练您粘贴的文本，相关处理遵守《隐私说明》。因 AI 识别存在技术局限，结果可能出现偏差，请勿将本结果作为唯一依据用于重要决策，或用于针对第三方（如笔记发布者、品牌方）的评价与传播。
@@ -573,20 +569,6 @@
 
     </div>
 
-    <aside class="dim-band" aria-label="评分维度说明">
-      <div class="db-head">
-        <span class="db-title">🧮 评分维度说明</span>
-        <span class="db-sub">点卡片或箭头，让每张「占卜卡」转到 C 位</span>
-      </div>
-      <div class="ds-coverflow">
-        <div class="ds-stage" id="ds-stage"></div>
-      </div>
-      <div class="ds-arrows">
-        <button id="ds-prev" aria-label="上一张">‹</button>
-        <button id="ds-next" aria-label="下一张">›</button>
-      </div>
-      <div class="ds-dots" id="ds-dots"></div>
-    </aside>
   </main>
 
   <!-- P2 隐私告知弹层 -->
@@ -689,13 +671,10 @@
     const tipsEl = document.getElementById("tips");
     const detailBody = document.getElementById("detail-body");
     const details = document.getElementById("details");
-    const shareWrap = document.getElementById("share-wrap");
-    const sharePlaceholder = document.getElementById("share-placeholder");
     const toastEl = document.getElementById("toast");
     const counterEl = document.getElementById("counter");
     const verdictEl = document.getElementById("verdict");
     const MAX_CHARS = 5000;
-    let lastReport = null;
     let toastTimer = null;
     let statusTipTimer = null;
     let currentStatusTip = "";
@@ -868,6 +847,25 @@
       "评估伪造体验、虚假对比、无来源数据等降低可信度的信号。",
       "检测“不买亏大了”“手慢无”“闭眼入”等制造焦虑紧迫感的话术。"
     ];
+    const DS_ICONS = ["🤝", "💰", "🏆", "🎣", "✨", "🔍", "⏰"];
+    const DS_TRIGGERS = [
+      ["品牌合作", "PR 礼盒", "感谢赠送", "商务合作", "品牌邀约"],
+      ["内部优惠", "专属链接", "粉丝福利", "返佣", "优惠券"],
+      ["最", "第一", "全网", "100%", "绝对"],
+      ["私信我", "进群", "闭眼入", "冲", "薅羊毛"],
+      ["7 天变白", "毛孔消失", "医美级", "逆天", "换脸"],
+      ["无来源数据", "盗图", "编造", "前后对比", "fake"],
+      ["手慢无", "不买亏大", "最后机会", "闭眼入", "抢"]
+    ];
+    const DS_EXAMPLES = [
+      "“感谢品牌爸爸送的 PR 礼盒”“这次是和品牌合作的推广”",
+      "“私我拿内部优惠码”“通过我的专属链接下单”",
+      "“全网第一的精华”“用完皮肤好到爆”",
+      "“想买的姐妹私信我”“进群领隐藏福利”",
+      "“7 天白一个度”“毛孔直接消失”",
+      "“据权威机构统计”“对比图是在别的博主那看到的”",
+      "“手慢无，最后 100 单”“不买真的亏大了”"
+    ];
 
     // 评分维度说明：占卜卡 coverflow（C 位居中，侧卡 3D 倾斜，动态旋转入场）
     function initDimCarousel() {
@@ -891,22 +889,31 @@
       let html =
         '<div class="ds-card" data-idx="0" role="group" aria-roledescription="slide" aria-label="第 1 张，评分逻辑">' +
           '<div class="dc-accent" style="background:#8a8a8a"></div>' +
-          '<div class="dc-head"><span class="dc-title">评分逻辑</span><span class="dc-badge" style="background:#8a8a8a">综合加权</span></div>' +
-          '<div class="dc-intro">AI 扫描全文 7 个维度，按权重加权得出风险等级。</div>' +
+          '<div class="dc-head"><span class="dc-icon">🧮</span><span class="dc-title">评分逻辑</span><span class="dc-badge" style="background:#8a8a8a">综合加权</span></div>' +
+          '<div class="dc-intro">AI 扫描全文 7 个维度，按权重加权得出风险等级。权重越高，对最终结论影响越大。</div>' +
           '<div class="dc-chart">' +
-            '<svg width="100" height="100" viewBox="0 0 100 100" aria-hidden="true">' + segHtml + '<circle cx="50" cy="50" r="20" fill="#fff"/></svg>' +
+            '<svg width="96" height="96" viewBox="0 0 100 100" aria-hidden="true">' + segHtml + '<circle cx="50" cy="50" r="20" fill="#fff"/></svg>' +
             '<div class="dc-legend">' + legendHtml + '</div>' +
+          '</div>' +
+          '<div class="dc-levels">' +
+            '<span style="background:#e8f5e9;color:#1f9d55">低：无明显营销</span>' +
+            '<span style="background:#fff7ed;color:#9a3412">中：部分话术命中</span>' +
+            '<span style="background:#fff0f2;color:#d6293f">高：多维度或重度</span>' +
           '</div>' +
         '</div>';
 
       // 第 1-7 张：各维度
       for (let i = 0; i < DIMS.length; i++) {
         const d = DIMS[i];
+        const triggers = DS_TRIGGERS[i].map(t => '<span style="background:' + DS_COLORS[i] + '15;color:' + DS_COLORS[i] + '">' + escapeHtml(t) + '</span>').join("");
         html +=
           '<div class="ds-card" data-idx="' + (i + 1) + '" role="group" aria-roledescription="slide" aria-label="第 ' + (i + 2) + ' 张，' + escapeHtml(d.name) + '">' +
             '<div class="dc-accent" style="background:' + DS_COLORS[i] + '"></div>' +
-            '<div class="dc-head"><span class="dc-title" style="color:' + DS_COLORS[i] + '">' + escapeHtml(d.name) + '</span><span class="dc-badge" style="background:' + DS_COLORS[i] + '">' + Math.round(d.weight * 100) + '%</span></div>' +
+            '<div class="dc-head"><span class="dc-icon">' + DS_ICONS[i] + '</span><span class="dc-title" style="color:' + DS_COLORS[i] + '">' + escapeHtml(d.name) + '</span><span class="dc-badge" style="background:' + DS_COLORS[i] + '">' + Math.round(d.weight * 100) + '%</span></div>' +
+            '<div class="dc-triggers">' + triggers + '</div>' +
+            '<div class="dc-example"><b>典型话术：</b>' + escapeHtml(DS_EXAMPLES[i]) + '</div>' +
             '<div class="dc-desc">' + escapeHtml(DS_DESCS[i]) + '</div>' +
+            '<div class="dc-bar"><div class="dc-bar-fill" style="width:' + Math.round(d.weight * 100) + '%;background:' + DS_COLORS[i] + '"></div></div>' +
           '</div>';
       }
       stage.innerHTML = html;
@@ -921,7 +928,7 @@
       let active = 0;
       function transformFor(o) {
         const big = window.innerWidth > 640;
-        const d1 = big ? 196 : 118, d2 = big ? 332 : 198, d3 = big ? 430 : 252;
+        const d1 = big ? 208 : 126, d2 = big ? 352 : 212, d3 = big ? 456 : 268;
         const rot1 = big ? 42 : 36, rot2 = big ? 50 : 42;
         if (o === 0) return { t: "translateX(0px) translateZ(90px) rotateY(0deg) scale(1.14)", op: 1, z: 30 };
         if (o === -1) return { t: "translateX(" + (-d1) + "px) translateZ(0) rotateY(" + rot1 + "deg) scale(.9)", op: .82, z: 20 };
@@ -961,7 +968,7 @@
       });
       window.addEventListener("resize", () => layout());
       // 入场动画：卡片从右侧飞入归位
-      cardEls.forEach((el) => { el.style.transform = "translateX(430px) translateZ(-170px) rotateY(-56deg) scale(.66)"; el.style.opacity = 0; });
+      cardEls.forEach((el) => { el.style.transform = "translateX(456px) translateZ(-170px) rotateY(-56deg) scale(.66)"; el.style.opacity = 0; });
       requestAnimationFrame(() => requestAnimationFrame(layout));
     }
     initDimCarousel();
@@ -1033,9 +1040,6 @@
 
     function renderReport(md) {
       md = cleanReport(md);
-      lastReport = null;
-      shareWrap.style.display = "none";
-      sharePlaceholder.style.display = "";
       if (!md) {
         verdictEl.innerHTML = "";
         summaryEl.innerHTML = '<p class="err">未获取到分析内容，请重试或更换笔记后再次检测。</p>';
@@ -1096,23 +1100,24 @@
       detailBody.innerHTML = renderDimensions(detailMd);
       details.open = false;
 
-      // 解析分享数据（仅供"复制文字结果"使用，不再渲染带网址的分享卡片）
-      buildShareCard(summaryMd, detailMd);
+      // 渲染风险结论 Hero（核心结论一眼可见）
+      buildVerdict(summaryMd);
 
       resultEl.style.display = "block";
-      sharePlaceholder.style.display = "none";
-      shareWrap.style.display = "block";
       resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     // 从摘要/评分依据解析出"复制文字结果"所需字段（合规要求：不再生成带本站网址的分享图片）
-    const LEVEL_COLOR = { "高": "#ff2e4d", "中": "#f5a623", "低": "#2bb673" };
     const LEVEL_LABEL = { "高": "高风险", "中": "中风险", "低": "低风险" };
 
     // 风险结论 Hero：等级圆形徽章 + 一句话结论，让核心判断一眼可见
-    function renderVerdict(level, conclusion) {
+    function buildVerdict(summaryMd) {
+      const lvM = (summaryMd || "").match(/风险等级[：:]\s*(低|中|高)/);
+      const level = lvM ? lvM[1] : "中";
+      const cM = (summaryMd || "").match(/一句话结论[：:]\s*(.+)/);
+      const conclusion = cM ? cM[1].trim() : "";
       const lv = LEVEL_LABEL[level] || LEVEL_LABEL["中"];
-      const sub = level === "高" ? "谨慎参考" : level === "中" ? "保持留意" : "相对安心";
+
       verdictEl.className = "verdict-hero lv-" + (level === "高" ? "high" : level === "低" ? "low" : "mid");
       verdictEl.innerHTML =
         '<div class="vh-badge lv-' + (level === "高" ? "high" : level === "低" ? "low" : "mid") + '">' +
@@ -1124,54 +1129,6 @@
           '<div class="vh-concl">' + escapeHtml(conclusion || "（未获取到一句话结论）") + '</div>' +
         '</div>';
     }
-
-    function buildShareCard(summaryMd, detailMd) {
-      const lvM = (summaryMd || "").match(/风险等级[：:]\s*(低|中|高)/);
-      const level = lvM ? lvM[1] : "中";
-      const cM = (summaryMd || "").match(/一句话结论[：:]\s*(.+)/);
-      const conclusion = cM ? cM[1].trim() : "";
-
-      renderVerdict(level, conclusion);
-
-      const hits = parseHits(detailMd);
-      const hitList = Object.keys(hits).map(name => ({ name, level: hits[name].level }));
-
-      // 仅保存数据供复制文本使用，不渲染任何带品牌/网址的卡片（避免生成可溯源的传播图片）
-      lastReport = { level, conclusion, hits: hitList };
-    }
-
-    // 复制检测结果文字（纯文本，不含本站网址，避免传播可溯源内容）
-    function copyShareText() {
-      if (!lastReport) { showToast("请先检测生成结果，再复制文字结果"); return; }
-      const dims = lastReport.hits.length
-        ? lastReport.hits.map(h => {
-            const info = LEVEL_MAP[h.level] || LEVEL_MAP["中"];
-            return h.name + "（" + info.label + "）";
-          }).join("、")
-        : "未命中明显话术维度";
-      const text =
-        "【种草甄别】小红书笔记话术检测\n" +
-        "风险等级：" + lastReport.level + "风险\n" +
-        "结论：" + (lastReport.conclusion || "（无）") + "\n" +
-        "命中维度：" + dims + "\n" +
-        "—— AI 生成，仅供参考";
-      const done = function () { showToast("📋 已复制到剪贴板"); };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(done, function () {
-          fallbackCopy(text); done();
-        });
-      } else { fallbackCopy(text); done(); }
-    }
-
-    function fallbackCopy(text) {
-      const ta = document.createElement("textarea");
-      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand("copy"); } catch (e) {}
-      ta.remove();
-    }
-
-    document.getElementById("btn-copy-text").addEventListener("click", copyShareText);
 
     let pollTimer = null;
     let pollStartAt = 0;
@@ -1243,11 +1200,9 @@
       btn.textContent = "检测中…";
       resultEl.style.display = "none";
       verdictEl.innerHTML = "";
-      shareWrap.style.display = "none";
-      sharePlaceholder.style.display = "";
       if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
       hideWaitingTips();
-      setStatus("已提交，右侧可翻阅维度说明", false, true);
+      setStatus("已提交，下方可翻阅维度说明", false, true);
       startStatusTips();
 
       try {
