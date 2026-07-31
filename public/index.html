@@ -915,7 +915,8 @@
     ];
 
     // 评分维度说明：手动拖拽横向卡片条，C 位卡片放大高亮并展开加权贡献
-    const LEVEL_PCT = { "轻": 33, "中": 66, "重": 100 };
+    // 兜底进度条宽度（AI 未返回贡献百分比时）：与知识库严重度系数对齐（轻0.5/中1.0/重1.5），重度封顶 100%
+    const LEVEL_PCT = { "轻": 50, "中": 100, "重": 100 };
     function initDimCarousel() {
       const strip = document.getElementById("ds-strip");
       const track = document.getElementById("ds-track");
@@ -1080,7 +1081,7 @@
           const pct = LEVEL_PCT[lvl] || 66;
           fill.style.width = pct + "%";
           fill.dataset.mode = "hit";
-          pctEl.textContent = (lvl === "轻" ? "轻" : lvl === "中" ? "中" : "重") + " " + pct + "%";
+          pctEl.textContent = (lvl === "轻" ? "轻" : lvl === "中" ? "中" : "重");
           pctEl.style.color = "var(--card-color)";
           const contrib = hit.contrib;
           if (contrib != null && contrib !== "") {
