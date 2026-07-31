@@ -1213,7 +1213,12 @@
       detailMd = detailMd.replace(/(^|\n)\s*#+\s*$/g, "").trim();
       tipsMd = tipsMd.replace(/^\s*#*\s*(小贴士|给普通用户的提醒)\s*\n*/i, "").trim();
 
-      summaryEl.innerHTML = marked.parse(summaryMd || "_（未获取到摘要）_");
+      // 先渲染顶部 Hero（从原始 summaryMd 提取完整结论）
+      buildVerdict(summaryMd);
+
+      // 摘要区把“一句话结论”改成“判定依据”，避免与 Hero 的短结论重复
+      const summaryMdForDisplay = (summaryMd || "").replace(/一句话结论/g, "判定依据");
+      summaryEl.innerHTML = marked.parse(summaryMdForDisplay || "_（未获取到摘要）_");
 
       if (tipsMd) {
         tipsEl.style.display = "block";
@@ -1231,9 +1236,6 @@
         window.__applyResultToCards(parseHits(detailMd));
       }
 
-      // 渲染风险结论 Hero（核心结论一眼可见）
-      buildVerdict(summaryMd);
-
       resultEl.style.display = "block";
       resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -1247,6 +1249,15 @@
       const level = lvM ? lvM[1] : "中";
       const cM = (summaryMd || "").match(/一句话结论[：:]\s*(.+)/);
       const conclusion = cM ? cM[1].trim() : "";
+      // Hero 区只放短版核心结论，详细长句留在下方“判定依据”
+      const shortConclusion = (function shorten(s, max) {
+        if (!s || s.length <= max) return s;
+        const seps = ["，", "。", "；", "→", "、"];
+        for (let i = max; i >= Math.floor(max / 2); i--) {
+          if (seps.includes(s[i])) return s.slice(0, i) + "…";
+        }
+        return s.slice(0, max) + "…";
+      })(conclusion, 24);
       const lv = LEVEL_LABEL[level] || LEVEL_LABEL["中"];
 
       verdictEl.className = "verdict-hero lv-" + (level === "高" ? "high" : level === "低" ? "low" : "mid");
@@ -1257,7 +1268,7 @@
         '</div>' +
         '<div class="vh-text">' +
           '<div class="vh-title">营销话术风险：' + escapeHtml(lv) + '</div>' +
-          '<div class="vh-concl">' + escapeHtml(conclusion || "（未获取到一句话结论）") + '</div>' +
+          '<div class="vh-concl">' + escapeHtml(shortConclusion || conclusion || "（未获取到一句话结论）") + '</div>' +
         '</div>';
     }
 
