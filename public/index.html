@@ -869,7 +869,7 @@
     // 7 个维度（权重仅用于排序，不在 UI 显示小数）
     const DIMS = [
       { name: "推广未标明", weight: 0.22 },
-      { name: "利益未披露", weight: 0.18 },
+      { name: "利益未披露（软信号）", weight: 0.18 },
       { name: "绝对化用语", weight: 0.16 },
       { name: "隐性营销意图", weight: 0.14 },
       { name: "功效夸张", weight: 0.12 },
@@ -878,13 +878,13 @@
     ];
     const DS_COLORS = ["#ff2e4d", "#ff6b35", "#ff9f1c", "#2ec4b6", "#3a86ff", "#8338ec", "#06b6d4"];
     const DS_DESCS = [
-      "检测“品牌合作”“PR 礼盒”等未明确披露商业推广关系的内容。",
-      "识别“内部优惠码”“专属链接”等可能带来佣金但未说明利益关联的表述。",
-      "捕捉“最”“第一”“全网”“100%”等夸大或极限词。",
-      "判断是否在“伪分享”中植入购买引导，如反复 cue 品牌、诱导私信进群。",
-      "识别“7 天白一个度”“毛孔消失”等超出常识或缺乏证据的功效承诺。",
-      "评估伪造体验、虚假对比、无来源数据等降低可信度的信号。",
-      "检测“不买亏大了”“手慢无”“闭眼入”等制造焦虑紧迫感的话术。"
+      "带购物链接 / 优惠码，但无“广告 / 合作”标识的内容。",
+      "暗示品牌合作、收赠品或置换，却未声明利益关联。",
+      "“最好 / 第一 / 包治 / 封神”等广告法禁用词。",
+      "场景化软植、情感绑架，或只讲优点不讲缺点的伪分享。",
+      "有时效或效果绝对宣称，却无依据支撑。",
+      "无个人实拍或使用场景，纯参数罗列或复制粘贴感。",
+      "制造焦虑、或虚假奖励引导冲动消费。"
     ];
     const DS_ICONS = [
       '<path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/>',
@@ -896,27 +896,27 @@
       '<circle cx="12" cy="13" r="8"/><path d="M12 9v4M12 17h.01"/><path d="M9 2h6"/>'
     ];
     const DS_TRIGGERS = [
-      ["品牌合作", "PR 礼盒", "感谢赠送", "商务合作", "品牌邀约"],
-      ["内部优惠", "专属链接", "粉丝福利", "返佣", "优惠券"],
-      ["最", "第一", "全网", "100%", "绝对"],
-      ["私信我", "进群", "闭眼入", "冲", "薅羊毛"],
-      ["7 天变白", "毛孔消失", "医美级", "逆天", "换脸"],
-      ["无来源数据", "盗图", "编造", "前后对比", "fake"],
-      ["手慢无", "不买亏大", "最后机会", "闭眼入", "抢"]
+      ["主页有同款", "优惠码", "私我", "左下小黄车", "合作笔记"],
+      ["感谢品牌方寄送", "免费试用", "品牌方大大", "置换来的", "合作笔记"],
+      ["最好", "第一", "全网", "封神", "一生推"],
+      ["闺蜜安利", "心疼妈妈", "这款救了我", "不是广纯分享", "只讲优点"],
+      ["7天白三个度", "一周见效", "根治", "立竿见影", "无效找我"],
+      ["成分表如下", "无实拍", "纯参数", "复制粘贴", "无使用场景"],
+      ["不买就亏", "错过等一年", "库存告急", "姐妹们冲", "限时"]
     ];
     const DS_EXAMPLES = [
-      "“感谢品牌爸爸送的 PR 礼盒”“这次是和品牌合作的推广”",
-      "“私我拿内部优惠码”“通过我的专属链接下单”",
-      "“全网第一的精华”“用完皮肤好到爆”",
-      "“想买的姐妹私信我”“进群领隐藏福利”",
-      "“7 天白一个度”“毛孔直接消失”",
-      "“据权威机构统计”“对比图是在别的博主那看到的”",
-      "“手慢无，最后 100 单”“不买真的亏大了”"
+      "“……主页有同款……”（带购买引导却无广告标识）",
+      "“……品牌方寄来的……”（收受表述无合作声明）",
+      "“……绝对最好用……”（命中广告法禁用词）",
+      "“……这款真的救了我……”（只讲优点无缺点）",
+      "“……一周白三个度……”（时效效果绝对宣称）",
+      "“……成分表如下……”（无个人使用场景）",
+      "“……限时不买没了……”（制造焦虑紧迫）"
     ];
 
     // 评分维度说明：手动拖拽横向卡片条，C 位卡片放大高亮并展开加权贡献
     // 兜底进度条宽度（AI 未返回贡献百分比时）：与知识库严重度系数对齐（轻0.5/中1.0/重1.5），重度封顶 100%
-    const LEVEL_PCT = { "轻": 50, "中": 100, "重": 100 };
+    const LEVEL_PCT = { "轻": 33, "中": 67, "重": 100 };
     function initDimCarousel() {
       const strip = document.getElementById("ds-strip");
       const track = document.getElementById("ds-track");
@@ -936,7 +936,7 @@
         let html =
           '<div class="ds-card" data-dim="" role="group" aria-label="评分逻辑" style="--card-color:#8a8a8a">' +
             '<div class="dc-head"><svg class="dc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg><span class="dc-title">评分逻辑</span><span class="dc-badge" style="background:#8a8a8a">综合加权</span></div>' +
-            '<div class="dc-intro">AI 扫描全文 7 个维度，按权重加权得出风险等级。权重越高，对结果影响越大。</div>' +
+            '<div class="dc-intro">AI 扫描全文 7 个维度，按权重加权得出风险等级。权重越高，对结果影响越大。每项命中按严重程度加权：<b>轻 0.5 / 中 1.0 / 重 1.5</b>（× 维度权重），求和映射为 0–100 可信度分（7 维权重总和 1.00）。</div>' +
             '<div class="dc-chart">' +
               '<svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true">' + segHtml + '<circle cx="42" cy="42" r="16" fill="#fff"/></svg>' +
               '<div class="dc-legend">' + legendHtml + '</div>' +
@@ -960,8 +960,8 @@
               '<div class="dc-example"><b>典型话术：</b>' + escapeHtml(DS_EXAMPLES[i]) + '</div>' +
               '<div class="dc-desc">' + escapeHtml(DS_DESCS[i]) + '</div>' +
               '<div class="dc-bar-row">' +
-                '<div class="dc-bar"><div class="dc-bar-fill" data-mode="weight" style="width:' + wPct + '%;background:' + DS_COLORS[i] + '"></div></div>' +
-                '<span class="dc-bar-pct">' + wPct + '%</span>' +
+                '<div class="dc-bar"><div class="dc-bar-fill" data-mode="idle" style="width:0%;background:' + DS_COLORS[i] + '"></div></div>' +
+                '<span class="dc-bar-pct" style="color:#aaa">待检测</span>' +
               '</div>' +
               '<div class="dc-contrib" data-contrib></div>' +
             '</div>';
@@ -1078,11 +1078,13 @@
             continue;
           }
           const lvl = hit.level || "中";
-          const pct = LEVEL_PCT[lvl] || 66;
+          const pct = LEVEL_PCT[lvl] || 67;
+          const sevColor = lvl === "轻" ? "#1f9d55" : lvl === "重" ? "#ff2e4d" : "#ff9f1c";
           fill.style.width = pct + "%";
+          fill.style.background = sevColor;
           fill.dataset.mode = "hit";
           pctEl.textContent = (lvl === "轻" ? "轻" : lvl === "中" ? "中" : "重");
-          pctEl.style.color = "var(--card-color)";
+          pctEl.style.color = sevColor;
           const contrib = hit.contrib;
           if (contrib != null && contrib !== "") {
             contribEl.innerHTML = "加权贡献：<b>" + escapeHtml(String(contrib)) + "</b>（命中程度 × 维度权重）";
@@ -1097,8 +1099,8 @@
 
     // 严重程度 → 进度条宽度 + 样式类 + 中文标签
     const LEVEL_MAP = {
-      "轻": { pct: 35, cls: "lv-low", label: "轻度" },
-      "中": { pct: 65, cls: "lv-mid", label: "中度" },
+      "轻": { pct: 33, cls: "lv-low", label: "轻度" },
+      "中": { pct: 67, cls: "lv-mid", label: "中度" },
       "重": { pct: 100, cls: "lv-high", label: "重度" }
     };
 
