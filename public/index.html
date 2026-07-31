@@ -65,7 +65,53 @@
     .value-item .vi-icon { font-size: 20px; }
     .value-item .vi-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-top: 4px; }
     .value-item .vi-desc { font-size: 11px; color: var(--gray); margin-top: 2px; line-height: 1.5; }
-    main { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
+    main { max-width: 1040px; margin: 0 auto; padding: 20px 16px 60px; }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 22px;
+      align-items: start;
+    }
+    .main-col { min-width: 0; max-width: 720px; }
+    /* 侧边维度说明栏：常驻、可翻阅 */
+    .dim-sidebar {
+      position: sticky;
+      top: 18px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+      max-height: calc(100vh - 36px);
+      overflow-y: auto;
+    }
+    .dim-sidebar .ds-head {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .dim-sidebar .ds-icon { font-size: 18px; }
+    .dim-sidebar .ds-title { font-weight: 700; font-size: 15px; color: var(--ink); }
+    .dim-sidebar .ds-list { display: flex; flex-direction: column; gap: 10px; }
+    .dim-sidebar .ds-card {
+      background: var(--red-soft);
+      border-radius: 10px;
+      padding: 11px 12px;
+      border: 1px solid #ffd6dd;
+    }
+    .dim-sidebar .ds-card-title {
+      font-weight: 700; font-size: 13px; color: var(--red-dark);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .dim-sidebar .ds-card-weight {
+      font-size: 11px; font-weight: 500;
+      color: #fff; background: var(--red);
+      padding: 1px 7px; border-radius: 999px;
+    }
+    .dim-sidebar .ds-card-desc {
+      font-size: 12px; color: #5a5a5a; line-height: 1.6; margin-top: 5px;
+    }
     label { display: block; font-weight: 600; margin: 16px 0 8px; font-size: 15px; }
     .demo-wrap { margin: 10px 0 6px; }
     .demo-label { font-size: 13px; color: var(--gray); margin-bottom: 8px; }
@@ -121,6 +167,12 @@
       width: 13px; height: 13px; border-radius: 50%;
       border: 2px solid var(--line); border-top-color: var(--red);
       animation: spin .8s linear infinite; flex: none;
+    }
+    #status .status-tip {
+      color: var(--gray);
+      font-size: 12px;
+      margin-left: 4px;
+      white-space: nowrap;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     #waiting-tips {
@@ -352,6 +404,15 @@
       header h1 { font-size: 18px; }
       header p { font-size: 12px; margin: 4px 0 0; }
       main { padding: 14px 12px 48px; }
+      .main-grid { grid-template-columns: 1fr; gap: 16px; }
+      .main-col { max-width: 100%; }
+      .dim-sidebar {
+        position: static; max-height: none; padding: 12px;
+      }
+      .dim-sidebar .ds-list {
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+      }
+      .dim-sidebar .ds-card-desc { display: none; }  /* 手机只显示标题+权重，轻量 */
       .value-strip { gap: 8px; margin: 12px 0 2px; }
       .value-item { padding: 10px 6px; }
       .value-item .vi-icon { font-size: 18px; }
@@ -391,25 +452,27 @@
   </header>
 
   <main>
-    <div class="value-strip">
-      <div class="value-item">
-        <div class="vi-icon">🔒</div>
-        <div class="vi-title">隐私优先</div>
-        <div class="vi-desc">不存储、不训练<br>仅本次分析</div>
-      </div>
-      <div class="value-item">
-        <div class="vi-icon">🧮</div>
-        <div class="vi-title">7 维智能评分</div>
-        <div class="vi-desc">逐句识别话术<br>权重加权判定</div>
-      </div>
-      <div class="value-item">
-        <div class="vi-icon">⚡</div>
-        <div class="vi-title">AI 秒级研判</div>
-        <div class="vi-desc">一分钟出报告<br>附证据原文</div>
-      </div>
-    </div>
+    <div class="main-grid">
+      <div class="main-col">
+        <div class="value-strip">
+          <div class="value-item">
+            <div class="vi-icon">🔒</div>
+            <div class="vi-title">隐私优先</div>
+            <div class="vi-desc">不存储、不训练<br>仅本次分析</div>
+          </div>
+          <div class="value-item">
+            <div class="vi-icon">🧮</div>
+            <div class="vi-title">7 维智能评分</div>
+            <div class="vi-desc">逐句识别话术<br>权重加权判定</div>
+          </div>
+          <div class="value-item">
+            <div class="vi-icon">⚡</div>
+            <div class="vi-title">AI 秒级研判</div>
+            <div class="vi-desc">一分钟出报告<br>附证据原文</div>
+          </div>
+        </div>
 
-    <label for="note">粘贴小红书笔记正文</label>
+        <label for="note">粘贴小红书笔记正文</label>
     <textarea id="note" placeholder="把小红书笔记的正文粘贴到这里（最多 5000 字）…"></textarea>
 
     <div class="demo-wrap">
@@ -462,7 +525,58 @@
       · <a href="#" id="feedback-link" style="color:var(--gray);text-decoration:underline;">意见反馈</a>
     </div>
 
-    <div id="toast"></div>
+        <div id="toast"></div>
+      </div>
+
+      <aside class="dim-sidebar" aria-label="评分维度说明">
+        <div class="ds-head">
+          <span class="ds-icon">🧮</span>
+          <span class="ds-title">评分维度说明</span>
+        </div>
+        <div class="ds-list">
+          <div class="ds-card">
+            <div class="ds-card-title">评分逻辑</div>
+            <div class="ds-card-weight">综合加权</div>
+            <div class="ds-card-desc">AI 扫描全文 7 个维度，按权重加权得出风险等级。权重越高，对结果影响越大。</div>
+          </div>
+          <div class="ds-card">
+            <div class="ds-card-title">推广未标明</div>
+            <div class="ds-card-weight">权重 22%</div>
+            <div class="ds-card-desc">检测“品牌合作”“PR 礼盒”等未明确披露商业推广关系的内容。</div>
+          </div>
+          <div class="ds-card">
+            <div class="ds-card-title">利益未披露</div>
+            <div class="ds-card-weight">权重 18%</div>
+            <div class="ds-card-desc">识别“内部优惠码”“专属链接”等可能带来佣金但未说明利益关联的表述。</div>
+          </div>
+          <div class="ds-card">
+            <div class="ds-card-title">绝对化用语</div>
+            <div class="ds-card-weight">权重 16%</div>
+            <div class="ds-card-desc">捕捉“最”“第一”“全网”“100%”等夸大或极限词。</div>
+          </div>
+          <div class="ds-card">
+            <div class="ds-card-title">隐性营销意图</div>
+            <div class="ds-card-weight">权重 14%</div>
+            <div class="ds-card-desc">判断是否在“伪分享”中植入购买引导，如反复 cue 品牌、诱导私信进群。</div>
+          </div>
+          <div class="ds-card">
+            <div class="ds-card-title">功效夸张</div>
+            <div class="ds-card-weight">权重 12%</div>
+            <div class="ds-card-desc">识别“7 天白一个度”“毛孔消失”等超出常识或缺乏证据的功效承诺。</div>
+          </div>
+          <div class="ds-card">
+            <div class="ds-card-title">信息可信度</div>
+            <div class="ds-card-weight">权重 10%</div>
+            <div class="ds-card-desc">评估伪造体验、虚假对比、无来源数据等降低可信度的信号。</div>
+          </div>
+          <div class="ds-card">
+            <div class="ds-card-title">情绪裹挟</div>
+            <div class="ds-card-weight">权重 8%</div>
+            <div class="ds-card-desc">检测“不买亏大了”“手慢无”“闭眼入”等制造焦虑紧迫感的话术。</div>
+          </div>
+        </div>
+      </aside>
+    </div>
   </main>
 
   <!-- P2 隐私告知弹层 -->
@@ -573,6 +687,43 @@
     const MAX_CHARS = 5000;
     let lastReport = null;
     let toastTimer = null;
+    let statusTipTimer = null;
+    let currentStatusTip = "";
+
+    // 等待时状态行末尾循环展示的轻松小贴士（10 字以内）
+    const STATUS_TIPS = [
+      "AI 正在系鞋带",
+      "正在逐句嗅探话术",
+      "比看完一集剧还快",
+      "已读 0%，但快了",
+      "正在请教维度专家",
+      "很快就好，别急",
+      "正在给话术称重",
+      "风险评估中…"
+    ];
+
+    function startStatusTips() {
+      if (statusTipTimer) clearInterval(statusTipTimer);
+      let idx = 0;
+      currentStatusTip = " · " + STATUS_TIPS[0];
+      renderStatusTip();
+      statusTipTimer = setInterval(() => {
+        idx = (idx + 1) % STATUS_TIPS.length;
+        currentStatusTip = " · " + STATUS_TIPS[idx];
+        renderStatusTip();
+      }, 5000);
+    }
+
+    function stopStatusTips() {
+      if (statusTipTimer) { clearInterval(statusTipTimer); statusTipTimer = null; }
+      currentStatusTip = "";
+      renderStatusTip();
+    }
+
+    function renderStatusTip() {
+      const tipEl = document.getElementById("status-tip");
+      if (tipEl) tipEl.textContent = currentStatusTip;
+    }
 
     // 实时字数统计（符合用户习惯：随时知道用量、避免超限）
     function updateCounter() {
@@ -585,7 +736,7 @@
     function setStatus(msg, isErr, loading) {
       const m = msg || "";
       if (loading) {
-        statusEl.innerHTML = '<span class="spin"></span><span>' + escapeHtml(m) + '</span>';
+        statusEl.innerHTML = '<span class="spin"></span><span>' + escapeHtml(m) + '</span><span id="status-tip" class="status-tip">' + escapeHtml(currentStatusTip) + '</span>';
         statusEl.className = "";
       } else {
         statusEl.textContent = m;
@@ -605,6 +756,7 @@
       waitingTipsEl.style.display = "none";
       waitingTipsEl.setAttribute("aria-hidden", "true");
       waitingTipsEl.innerHTML = "";
+      stopStatusTips();
     }
 
     // 等待时轮播的评分维度说明：每 10 秒切换一页，循环展示 8 页
@@ -944,11 +1096,9 @@
         else if (sec < 90) phase = "正在综合 7 个维度加权评分，已等待 " + sec + " 秒…";
         else phase = "分析仍在进行（内容较多），已等待 " + sec + " 秒…";
         setStatus(phase, false, true);
-        showWaitingTips(sec);
         pollTimer = setTimeout(() => pollStatus(taskId), 1000);
       } catch (e) {
         setStatus("网络波动，正在自动重试（" + e.message + "）", true, true);
-        showWaitingTips(Math.round((Date.now() - pollStartAt) / 1000));
         // 网络错误也纳入超时保护
         if (Date.now() - pollStartAt >= POLL_TIMEOUT_MS) {
           hideWaitingTips();
@@ -980,8 +1130,8 @@
       sharePlaceholder.style.display = "";
       if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
       hideWaitingTips();
-      setStatus("已提交，正在启动分析…", false, true);
-      showWaitingTips(0);
+      setStatus("已提交，右侧可翻阅维度说明", false, true);
+      startStatusTips();
 
       try {
         const resp = await fetch("/api/analyze", {
