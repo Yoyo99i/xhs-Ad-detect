@@ -20,7 +20,6 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const tls = require("tls");
 const IS_BASE = "https://app.infinisynapse.cn";
 const PORT = process.env.PORT || 3000;
 const TIMEOUT_MS = 180000; // agentic 任务可能 1-3 分钟，给 180s 上限
@@ -30,87 +29,6 @@ const taskStore = new Map();
 
 // 反馈存储文件（追加 JSONL，零依赖）
 const FEEDBACK_FILE = path.join(__dirname, "feedback.jsonl");
-
-// 反馈邮件通知：用 QQ 邮箱 SMTP（SSL 465），零依赖原生实现。
-// 凭据从环境变量读取，绝不写死进代码/仓库：
-//   QQ_SMTP_USER  = 收件/发件邮箱（如 kkqkkqookook@qq.com）
-//   QQ_SMTP_AUTH  = QQ 邮箱授权码（非登录密码）
-// OnRender 后台配置这两个变量即可，本地不配则静默跳过（不影响反馈入库）。
-const QQ_SMTP_HOST = "smtp.qq.com";
-const QQ_SMTP_PORT = 465;
-const QQ_SMTP_USER = process.env.QQ_SMTP_USER || "";
-const QQ_SMTP_AUTH = process.env.QQ_SMTP_AUTH || "";
-
-function smtpSend({ from, to, subject, text }) {
-  return new Promise((resolve, reject) => {
-    const socket = tls.connect(QQ_SMTP_PORT, QQ_SMTP_HOST, { rejectUnauthorized: true }, () => {
-      let step = 0;
-      let buf = "";
-      const send = (s) => { console.log(`[smtp] > ${s.slice(0, 80)}${s.length > 80 ? "..." : ""}`); socket.write(s + "\r\n"); };
-      const b64 = (s) => Buffer.from(s, "utf-8").toString("base64");
-      const encodeSubject = (s) => `=?UTF-8?B?${b64(s)}?=`;
-      // 把 base64 正文按 76 字符/行切分（RFC 2045 建议）
-      const wrapB64 = (s) => s.replace(/(.{76})/g, "$1\r\n").trim();
-      const onData = (chunk) => {
-        buf += chunk.toString();
-        if (!buf.includes("\r\n")) return;
-        const line = buf.slice(0, buf.indexOf("\r\n"));
-        buf = buf.slice(buf.indexOf("\r\n") + 2);
-        console.log(`[smtp] < ${line}`);
-        const code = line.slice(0, 3);
-        if (code[0] === "4" || code[0] === "5") { socket.destroy(); return reject(new Error("SMTP " + line)); }
-        switch (step) {
-          case 0: send("EHLO localhost"); step++; break;
-          case 1: send("AUTH LOGIN"); step++; break;
-          case 2: send(b64(QQ_SMTP_USER)); step++; break;
-          case 3: send(b64(QQ_SMTP_AUTH)); step++; break;
-          case 4: send(`MAIL FROM:<${from}>`); step++; break;
-          case 5: send(`RCPT TO:<${to}>`); step++; break;
-          case 6: send("DATA"); step++; break;
-          case 7:
-            send(`From: ${from}`);
-            send(`To: ${to}`);
-            send(`Subject: ${encodeSubject(subject)}`);
-            send("MIME-Version: 1.0");
-            send("Content-Type: text/plain; charset=UTF-8");
-            send("Content-Transfer-Encoding: base64");
-            send("");
-            send(wrapB64(b64(text)));
-            send(".");
-            step++;
-            break;
-          case 8: send("QUIT"); socket.end(); resolve(true); break;
-        }
-      };
-      socket.on("data", onData);
-    });
-    socket.on("error", reject);
-    socket.setTimeout(15000, () => { socket.destroy(); reject(new Error("SMTP timeout")); });
-  });
-}
-
-async function sendFeedbackMail(rec) {
-  if (!QQ_SMTP_USER || !QQ_SMTP_AUTH) {
-    console.log("[feedback] SMTP 未配置，跳过邮件通知（反馈已入库）");
-    return false;
-  }
-  const when = new Date(rec.ts).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" });
-  const text =
-    `收到一条新的意见反馈：\n\n` +
-    `时间：${when}\n` +
-    `昵称：${rec.name || "(匿名)"}\n` +
-    `联系邮箱：${rec.email || "(未填)"}\n` +
-    `IP：${rec.ip || "(未知)"}\n` +
-    `反馈内容：\n${rec.message}\n`;
-  await smtpSend({
-    from: QQ_SMTP_USER,
-    to: QQ_SMTP_USER,
-    subject: "【种草甄别】新反馈：" + (rec.name || "匿名"),
-    text
-  });
-  console.log("[feedback] mail sent to", QQ_SMTP_USER);
-  return true;
-}
 
 function buildPrompt(noteText) {
   return [
@@ -326,7 +244,9 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { ok: true, taskId, status: "running" });
   }
 
-  // 意见反馈：POST /api/feedback  → 追加写入 feedback.jsonl（零依赖，国内可达）+ 邮件通知
+  // 意见反馈：POST /api/feedback  → 追加写入 feedback.jsonl（零依赖，国内可达）
+  // 方案 A：不再在线上直连 SMTP（OnRender 免费版出站 SMTP 465 被 ETIMEDOUT 拦截），
+  // 反馈先可靠落盘，后续由 agently-mail 定时读取 feedback.jsonl 转发到 QQ 邮箱。
   if (req.url === "/api/feedback" && req.method === "POST") {
     let raw = "";
     for await (const c of req) raw += c;
@@ -347,12 +267,19 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       return json(res, 500, { error: "write failed", code: "WRITE_FAIL" });
     }
-    // 异步发邮件通知（失败不影响前端返回，避免阻塞用户）
-    sendFeedbackMail(rec).catch((e) => {
-      const detail = (e && (e.message || e.stack || JSON.stringify(e))) || String(e) || "unknown error";
-      console.error("[feedback] mail failed:", detail);
-    });
     return json(res, 200, { ok: true });
+  }
+
+  // 反馈导出：GET /api/feedback/export  → 返回全部反馈 JSON 数组（供 agently-mail 等读取）
+  if (req.url === "/api/feedback/export" && req.method === "GET") {
+    try {
+      if (!fs.existsSync(FEEDBACK_FILE)) return json(res, 200, { ok: true, count: 0, items: [] });
+      const lines = fs.readFileSync(FEEDBACK_FILE, "utf-8").split("\n").filter(Boolean);
+      const items = lines.map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+      return json(res, 200, { ok: true, count: items.length, items });
+    } catch (e) {
+      return json(res, 500, { error: "read failed", code: "READ_FAIL" });
+    }
   }
 
   return json(res, 404, { error: "Not found", code: "NOT_FOUND" });
