@@ -222,13 +222,15 @@
     .verdict-hero .vh-badge .vh-lv { font-size: 20px; }
     .verdict-hero .vh-badge .vh-sub { font-size: 10px; font-weight: 500; opacity: .92; }
     .verdict-hero .vh-badge.lv-high { background: var(--red); }
-    .verdict-hero .vh-badge.lv-mid { background: var(--warning); }
+    .verdict-hero .vh-badge.lv-mid { background: #fff7ed; color: #9a3412; border: 2px solid #fbbf24; }
     .verdict-hero .vh-badge.lv-low { background: var(--success); }
     .verdict-hero .vh-text { min-width: 0; }
     .verdict-hero .vh-title { font-size: 15px; font-weight: 700; color: var(--ink); }
     .verdict-hero .vh-concl { font-size: 13px; color: var(--gray); margin-top: 3px; line-height: 1.6; }
     .verdict-hero.lv-high { border-color: #ffd0d7; }
-    .verdict-hero.lv-mid { border-color: #ffe2bf; }
+    .verdict-hero.lv-mid { background: #fff7ed; border-color: #fbbf24; }
+    .verdict-hero.lv-mid .vh-title { color: #9a3412; }
+    .verdict-hero.lv-mid .vh-concl { color: #78350f; }
     .verdict-hero.lv-low { border-color: #cdeed8; }
     .card {
       background: #fff;
@@ -473,7 +475,7 @@
         </div>
 
         <label for="note">粘贴小红书笔记正文</label>
-    <textarea id="note" placeholder="把小红书笔记的正文粘贴到这里（最多 5000 字）…"></textarea>
+    <textarea id="note" placeholder="请粘贴小红书笔记的【正文内容】，我们会基于正文做话术风险分析…"></textarea>
 
     <div class="demo-wrap">
       <div class="demo-label">🧪 试试示例（虚构品牌，一键检测）</div>
@@ -484,7 +486,7 @@
       </div>
     </div>
 
-    <div class="meta"><span>最多 5000 字 · 仅用于本次分析，不存储、不用于训练</span><span id="counter">0 / 5000</span></div>
+    <div class="meta"><span>笔记正文字数限制 5000 字 · 仅用于本次分析，不存储、不用于训练</span><span id="counter">0 / 5000 字</span></div>
 
     <button id="btn">开始检测</button>
     <div id="status" aria-live="polite" role="status"></div>
