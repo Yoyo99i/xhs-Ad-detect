@@ -75,6 +75,38 @@
       color: var(--red);
       min-height: 20px;
     }
+    #waiting-tips {
+      margin-top: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.7;
+      display: none;
+    }
+    #waiting-tips .tip-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: var(--red);
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    #waiting-tips .tip-head .tag {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--gray);
+      background: var(--red-soft);
+      padding: 1px 7px;
+      border-radius: 999px;
+    }
+    #waiting-tips ul { margin: 8px 0 0; padding-left: 18px; }
+    #waiting-tips li { margin-bottom: 4px; }
+    #waiting-tips .weight { color: var(--red); font-weight: 700; }
     #result { margin-top: 22px; display: none; }
     .card {
       background: #fff;
@@ -266,6 +298,8 @@
       .demo-btns button { font-size: 12px; padding: 5px 10px; }
       .dim-name { font-size: 13px; }
       .dim-evi, .dim-note { font-size: 12px; }
+      #waiting-tips { padding: 12px 14px; font-size: 12px; }
+      #waiting-tips .tip-head { font-size: 13px; }
     }
 
     /* 动效偏好：尊重 prefers-reduced-motion */
@@ -297,6 +331,7 @@
 
     <button id="btn">开始检测</button>
     <div id="status" aria-live="polite" role="status"></div>
+    <div id="waiting-tips" style="display:none" aria-hidden="true"></div>
 
     <div id="result">
       <div class="result-head">📋 检测报告</div>
@@ -429,6 +464,7 @@
     const btn = document.getElementById("btn");
     const note = document.getElementById("note");
     const statusEl = document.getElementById("status");
+    const waitingTipsEl = document.getElementById("waiting-tips");
     const resultEl = document.getElementById("result");
     const summaryEl = document.getElementById("summary");
     const tipsEl = document.getElementById("tips");
@@ -451,6 +487,69 @@
       toastEl.classList.add("show");
       if (toastTimer) clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toastEl.classList.remove("show"), duration);
+    }
+
+    function hideWaitingTips() {
+      waitingTipsEl.style.display = "none";
+      waitingTipsEl.setAttribute("aria-hidden", "true");
+      waitingTipsEl.innerHTML = "";
+    }
+
+    // 等待时轮播的评分维度说明：每 10 秒切换一页，循环展示 8 页
+    const WAITING_TIPS = [
+      {
+        title: "🧮 评分逻辑",
+        tag: "如何得出风险等级",
+        body: "AI 会从 7 个维度扫描笔记全文，按维度权重加权计算整体风险等级。权重越高，对最终结论影响越大。任一维度过重会显著拉高风险。"
+      },
+      {
+        title: "1️⃣ 推广未标明",
+        tag: "权重 22%",
+        body: "检测是否包含'品牌合作''感谢品牌赠送''PR礼盒'等未明确披露商业推广关系的内容。未标明的推广是合规风险最高的情形。"
+      },
+      {
+        title: "2️⃣ 利益未披露",
+        tag: "权重 18%",
+        body: "识别'内部优惠码''专属链接''粉丝福利'等可能带来佣金或返利的表述，但未向读者说明利益关联。"
+      },
+      {
+        title: "3️⃣ 绝对化用语",
+        tag: "权重 16%",
+        body: "捕捉'最''第一''全网''100%''绝对'等极限词。这类表述容易夸大效果，是广告法和平台治理的重点。"
+      },
+      {
+        title: "4️⃣ 隐性营销意图",
+        tag: "权重 14%",
+        body: "判断全文是否在'伪分享'中植入购买引导，例如反复cue品牌、强调限时优惠、诱导私信或进群。"
+      },
+      {
+        title: "5️⃣ 功效夸张",
+        tag: "权重 12%",
+        body: "识别'7天白一个度''毛孔消失'' medically proven'等超出常识或缺乏证据的功效承诺。"
+      },
+      {
+        title: "6️⃣ 信息可信度",
+        tag: "权重 10%",
+        body: "评估是否出现伪造体验、虚假对比、盗图嫌疑、无来源数据等降低内容可信度的信号。"
+      },
+      {
+        title: "7️⃣ 情绪裹挟",
+        tag: "权重 8%",
+        body: "检测'不买亏大了''最后机会''手慢无''闭眼入'等制造焦虑、紧迫感的情绪话术。"
+      }
+    ];
+
+    function showWaitingTips(elapsedSec) {
+      const idx = Math.floor(elapsedSec / 10) % WAITING_TIPS.length;
+      const tip = WAITING_TIPS[idx];
+      waitingTipsEl.innerHTML =
+        '<div class="tip-head">' +
+          '<span>' + escapeHtml(tip.title) + '</span>' +
+          '<span class="tag">' + escapeHtml(tip.tag) + '</span>' +
+        '</div>' +
+        '<div>' + escapeHtml(tip.body) + '</div>';
+      waitingTipsEl.style.display = "block";
+      waitingTipsEl.setAttribute("aria-hidden", "false");
     }
 
     // 把 agent 返回的 Markdown 渲染出来。
@@ -477,7 +576,7 @@
 
     // 7 个维度（权重仅用于排序，不在 UI 显示小数）
     const DIMS = [
-      { name: "商业标识缺失", weight: 0.22 },
+      { name: "推广未标明", weight: 0.22 },
       { name: "利益未披露", weight: 0.18 },
       { name: "绝对化用语", weight: 0.16 },
       { name: "隐性营销意图", weight: 0.14 },
@@ -675,12 +774,13 @@
 
     let pollTimer = null;
     let pollStartAt = 0;
-    const POLL_TIMEOUT_MS = 60000; // 60 秒超时保护，避免无限轮询
+    const POLL_TIMEOUT_MS = 180000; // 3 分钟超时保护，匹配实际分析耗时（常见 90 秒～2 分钟）
     async function pollStatus(taskId) {
       try {
         const resp = await fetch("/api/status?taskId=" + encodeURIComponent(taskId));
         const data = await resp.json();
         if (data.status === "done") {
+          hideWaitingTips();
           renderReport(data.result);
           const sec = Math.round((Date.now() - pollStartAt) / 1000);
           setStatus("分析完成，共耗时约 " + sec + " 秒");
@@ -689,31 +789,37 @@
           return;
         }
         if (data.status === "error") {
+          hideWaitingTips();
           setStatus("分析失败：" + (data.error || "未知错误") + "，请重试", true);
           btn.disabled = false;
           btn.textContent = "开始检测";
           return;
         }
-        // 超时保护：超过 60 秒仍未出结果，提示用户并停止轮询
+        // 超时保护：超过 3 分钟仍未出结果，提示用户并停止轮询
         const elapsed = Date.now() - pollStartAt;
+        const sec = Math.round(elapsed / 1000);
         if (elapsed >= POLL_TIMEOUT_MS) {
-          setStatus("分析时间较长（已超过 60 秒），请稍后点击下方按钮重试，或直接刷新页面", true);
+          hideWaitingTips();
+          setStatus("分析时间较长（已超过 3 分钟），请稍后点击下方按钮重试，或直接刷新页面", true);
           btn.disabled = false;
           btn.textContent = "重新检测";
           return;
         }
-        // running：每秒更新一次等待时间（分阶段友好文案）
-        const sec = Math.round(elapsed / 1000);
+        // running：每秒更新一次等待时间（分阶段友好文案），同时轮播维度说明
         let phase = "正在分析中，已等待 " + sec + " 秒…";
         if (sec < 10) phase = "正在启动分析引擎，已等待 " + sec + " 秒…";
-        else if (sec < 30) phase = "AI 正在研判话术浓度，已等待 " + sec + " 秒…";
+        else if (sec < 45) phase = "AI 正在逐句研判话术浓度，已等待 " + sec + " 秒…";
+        else if (sec < 90) phase = "正在综合 7 个维度加权评分，已等待 " + sec + " 秒…";
         else phase = "分析仍在进行（内容较多），已等待 " + sec + " 秒…";
         setStatus(phase);
+        showWaitingTips(sec);
         pollTimer = setTimeout(() => pollStatus(taskId), 1000);
       } catch (e) {
         setStatus("网络波动，正在自动重试（" + e.message + "）", true);
+        showWaitingTips(Math.round((Date.now() - pollStartAt) / 1000));
         // 网络错误也纳入超时保护
         if (Date.now() - pollStartAt >= POLL_TIMEOUT_MS) {
+          hideWaitingTips();
           setStatus("网络连接不稳定，请检查网络后点击下方按钮重试", true);
           btn.disabled = false;
           btn.textContent = "重新检测";
@@ -740,7 +846,9 @@
       shareWrap.style.display = "none";
       sharePlaceholder.style.display = "";
       if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+      hideWaitingTips();
       setStatus("已提交，正在启动分析…");
+      showWaitingTips(0);
 
       try {
         const resp = await fetch("/api/analyze", {
@@ -751,6 +859,7 @@
         const data = await resp.json();
 
         if (!resp.ok || !data.ok) {
+          hideWaitingTips();
           const msg = (data && data.error) ? data.error : ("请求失败（HTTP " + resp.status + "）");
           setStatus("出错了：" + msg + (data && data.code ? " [" + data.code + "]" : ""), true);
           btn.disabled = false;
@@ -760,6 +869,7 @@
         pollStartAt = Date.now();
         pollStatus(data.taskId);
       } catch (e) {
+        hideWaitingTips();
         setStatus("网络或服务器错误：" + e.message + "，请检查网络后重试", true);
         btn.disabled = false;
         btn.textContent = "重新检测";
