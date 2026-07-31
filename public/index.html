@@ -341,99 +341,69 @@
     .form-field textarea:focus { outline: none; border-color: var(--red); }
     .form-field textarea { resize: vertical; }
 
-    /* ===== 评分维度说明：占卜卡 coverflow ===== */
+    /* ===== 评分维度说明：单行横向循环滚动条 ===== */
     .dim-band {
       margin-top: 18px;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 16px 14px 18px;
-      box-shadow: var(--shadow-sm);
+      padding: 12px 0 4px;
+      /* 无背景、无边框、无阴影，整体融入页面 */
     }
     .db-head {
       display: flex; align-items: baseline; gap: 8px;
-      margin-bottom: 2px;
+      margin: 0 2px 4px;
     }
-    .db-title { font-weight: 700; font-size: 16px; color: var(--ink); }
+    .db-title { font-weight: 700; font-size: 15px; color: var(--ink); }
     .db-sub { font-size: 12px; color: var(--gray); }
-    .ds-coverflow {
+    .ds-strip {
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 380px;
-      margin-top: 8px;
-      perspective: 1200px;
       overflow: hidden;
+      cursor: grab;
+      margin-top: 8px;
+      /* 左右淡入淡出，让循环更自然 */
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+      mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
     }
-    .ds-stage {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
+    .ds-strip.is-dragging { cursor: grabbing; }
+    .ds-track {
+      display: flex;
+      gap: 12px;
+      width: max-content;
+      will-change: transform;
     }
     .ds-card {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 200px;
-      height: 318px;
-      margin-left: -100px;
-      margin-top: -159px;
-      background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 14px 14px 16px;
+      width: 214px;
+      flex: none;
+      background: #fff;
+      border-radius: 16px;
+      padding: 13px 14px 14px;
       box-sizing: border-box;
-      box-shadow: 0 8px 18px rgba(20, 20, 40, 0.10);
-      transition: transform .55s cubic-bezier(.22,.61,.36,1), opacity .45s ease, box-shadow .45s ease;
-      transform-style: preserve-3d;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      will-change: transform, opacity;
-      backface-visibility: hidden;
+      box-shadow: 0 2px 10px rgba(20,20,40,0.06);
       user-select: none;
+      position: relative;
+      overflow: hidden;
     }
-    .ds-card.is-center { border-color: #ffd0d8; box-shadow: 0 20px 44px rgba(255, 46, 77, 0.18); }
-    .ds-card .dc-accent { height: 5px; border-radius: 3px; margin-bottom: 9px; flex: none; }
-    .ds-card .dc-head { display: flex; align-items: center; gap: 6px; }
-    .ds-card .dc-icon { font-size: 18px; line-height: 1; }
+    .ds-card::before {
+      content: "";
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: var(--card-color, #aaa);
+    }
+    .ds-card .dc-head { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+    .ds-card .dc-icon { font-size: 17px; line-height: 1; }
     .ds-card .dc-title { font-weight: 700; font-size: 14px; color: var(--ink); line-height: 1.3; flex: 1; }
     .ds-card .dc-badge { flex: none; font-size: 11px; font-weight: 600; color: #fff; padding: 2px 8px; border-radius: 999px; }
-    .ds-card .dc-triggers { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; min-height: 22px; }
-    .ds-card .dc-triggers span { font-size: 10px; padding: 2px 7px; border-radius: 999px; font-weight: 500; }
-    .ds-card .dc-example { font-size: 11px; color: #555; background: #f6f7f9; padding: 7px 9px; border-radius: 9px; margin-top: 8px; line-height: 1.55; }
+    .ds-card .dc-triggers { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; min-height: 20px; }
+    .ds-card .dc-triggers span { font-size: 10px; padding: 2px 7px; border-radius: 999px; font-weight: 500; background: var(--tag-bg); color: var(--tag-color); }
+    .ds-card .dc-example { font-size: 11px; color: #555; background: #f6f7f9; padding: 6px 8px; border-radius: 8px; margin-top: 8px; line-height: 1.5; }
     .ds-card .dc-example b { color: var(--ink); font-weight: 600; }
-    .ds-card .dc-desc { font-size: 11.5px; color: #555; line-height: 1.6; margin-top: 8px; flex: 1; overflow: hidden; }
-    .ds-card .dc-bar { height: 5px; background: #f0f0f0; border-radius: 999px; overflow: hidden; margin-top: 10px; flex: none; }
+    .ds-card .dc-desc { font-size: 11.5px; color: #555; line-height: 1.55; margin-top: 8px; }
+    .ds-card .dc-bar { height: 4px; background: #f0f0f0; border-radius: 999px; overflow: hidden; margin-top: 10px; }
     .ds-card .dc-bar-fill { height: 100%; border-radius: 999px; }
-    .ds-card .dc-chart { display: flex; flex-direction: column; align-items: center; margin: 4px 0 2px; }
+    .ds-card .dc-chart { display: flex; flex-direction: column; align-items: center; margin: 2px 0 4px; }
     .ds-card .dc-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; width: 100%; margin-top: 6px; font-size: 10px; }
     .ds-card .dc-legend span { display: flex; align-items: center; gap: 4px; color: #444; }
     .ds-card .dc-legend i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-    .ds-card .dc-intro { font-size: 11.5px; color: #555; line-height: 1.6; margin-top: 5px; }
+    .ds-card .dc-intro { font-size: 11.5px; color: #555; line-height: 1.55; margin-top: 4px; }
     .ds-card .dc-levels { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
     .ds-card .dc-levels span { font-size: 10px; padding: 2px 7px; border-radius: 999px; font-weight: 500; }
-    .ds-arrows { display: flex; justify-content: center; gap: 14px; margin-top: 6px; }
-    .ds-arrows button {
-      width: 38px; height: 38px; border-radius: 50%;
-      border: 1px solid var(--line); background: #fff; color: var(--ink);
-      font-size: 20px; line-height: 1; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all .2s ease;
-    }
-    .ds-arrows button:hover { border-color: var(--red); color: var(--red); background: var(--red-soft); }
-    .ds-arrows button:disabled { opacity: .4; cursor: not-allowed; }
-    .ds-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
-    .ds-dots button {
-      width: 7px; height: 7px; border-radius: 50%; border: none;
-      background: #dcdce4; padding: 0; cursor: pointer; transition: all .25s ease;
-    }
-    .ds-dots button.active { background: var(--red); width: 18px; border-radius: 4px; }
-    @media (prefers-reduced-motion: reduce) {
-      .ds-card { transition: none; }
-    }
 
     /* ===== S3.1 移动端响应式（≤480px） ===== */
     @media (max-width: 480px) {
@@ -465,14 +435,13 @@
       .dim-evi, .dim-note { font-size: 12px; }
       #waiting-tips { padding: 12px 14px; font-size: 12px; }
       #waiting-tips .tip-head { font-size: 13px; }
-      .ds-card { width: 164px; height: 268px; margin-left: -82px; margin-top: -134px; padding: 12px; border-radius: 14px; }
+      .ds-card { width: 176px; padding: 10px 11px; border-radius: 13px; }
       .ds-card .dc-title { font-size: 13px; }
       .ds-card .dc-triggers { gap: 4px; margin-top: 6px; }
       .ds-card .dc-triggers span { font-size: 9px; padding: 1px 5px; }
       .ds-card .dc-example { font-size: 10px; padding: 5px 7px; margin-top: 6px; }
       .ds-card .dc-desc { font-size: 10.5px; margin-top: 6px; }
-      .ds-coverflow { height: 320px; }
-      .ds-arrows button { width: 32px; height: 32px; }
+      .ds-card .dc-bar { margin-top: 8px; }
     }
 
     /* 动效偏好：尊重 prefers-reduced-motion */
@@ -528,16 +497,11 @@
     <aside class="dim-band" aria-label="评分维度说明">
       <div class="db-head">
         <span class="db-title">🧮 评分维度说明</span>
-        <span class="db-sub">点卡片或箭头，让每张「占卜卡」转到 C 位</span>
+        <span class="db-sub">左右滑动查看 8 个维度</span>
       </div>
-      <div class="ds-coverflow">
-        <div class="ds-stage" id="ds-stage"></div>
+      <div class="ds-strip" id="ds-strip">
+        <div class="ds-track" id="ds-track"></div>
       </div>
-      <div class="ds-arrows">
-        <button id="ds-prev" aria-label="上一张">‹</button>
-        <button id="ds-next" aria-label="下一张">›</button>
-      </div>
-      <div class="ds-dots" id="ds-dots"></div>
     </aside>
 
     <div id="status" aria-live="polite" role="status"></div>
@@ -867,109 +831,122 @@
       "“手慢无，最后 100 单”“不买真的亏大了”"
     ];
 
-    // 评分维度说明：占卜卡 coverflow（C 位居中，侧卡 3D 倾斜，动态旋转入场）
+    // 评分维度说明：单行横向循环滚动条（自动滚动 + 鼠标拖拽）
     function initDimCarousel() {
-      const stage = document.getElementById("ds-stage");
-      const dots = document.getElementById("ds-dots");
-      const prevBtn = document.getElementById("ds-prev");
-      const nextBtn = document.getElementById("ds-next");
-      if (!stage) return;
-      const total = 1 + DIMS.length;
+      const strip = document.getElementById("ds-strip");
+      const track = document.getElementById("ds-track");
+      if (!track || !strip) return;
 
-      // 第 0 张：评分逻辑综合加权（饼图）
-      const r = 36, c = 2 * Math.PI * r;
-      let off = 0, segHtml = "", legendHtml = "";
-      for (let i = 0; i < DIMS.length; i++) {
-        const d = DIMS[i];
-        const seg = d.weight * c;
-        segHtml += '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="' + DS_COLORS[i] + '" stroke-width="14" stroke-dasharray="' + seg.toFixed(2) + ' ' + (c - seg).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 50 50)" />';
-        off += seg;
-        legendHtml += '<span><i style="background:' + DS_COLORS[i] + '"></i>' + escapeHtml(d.name) + ' ' + Math.round(d.weight * 100) + '%</span>';
-      }
-      let html =
-        '<div class="ds-card" data-idx="0" role="group" aria-roledescription="slide" aria-label="第 1 张，评分逻辑">' +
-          '<div class="dc-accent" style="background:#8a8a8a"></div>' +
-          '<div class="dc-head"><span class="dc-icon">🧮</span><span class="dc-title">评分逻辑</span><span class="dc-badge" style="background:#8a8a8a">综合加权</span></div>' +
-          '<div class="dc-intro">AI 扫描全文 7 个维度，按权重加权得出风险等级。权重越高，对最终结论影响越大。</div>' +
-          '<div class="dc-chart">' +
-            '<svg width="96" height="96" viewBox="0 0 100 100" aria-hidden="true">' + segHtml + '<circle cx="50" cy="50" r="20" fill="#fff"/></svg>' +
-            '<div class="dc-legend">' + legendHtml + '</div>' +
-          '</div>' +
-          '<div class="dc-levels">' +
-            '<span style="background:#e8f5e9;color:#1f9d55">低：无明显营销</span>' +
-            '<span style="background:#fff7ed;color:#9a3412">中：部分话术命中</span>' +
-            '<span style="background:#fff0f2;color:#d6293f">高：多维度或重度</span>' +
-          '</div>' +
-        '</div>';
-
-      // 第 1-7 张：各维度
-      for (let i = 0; i < DIMS.length; i++) {
-        const d = DIMS[i];
-        const triggers = DS_TRIGGERS[i].map(t => '<span style="background:' + DS_COLORS[i] + '15;color:' + DS_COLORS[i] + '">' + escapeHtml(t) + '</span>').join("");
-        html +=
-          '<div class="ds-card" data-idx="' + (i + 1) + '" role="group" aria-roledescription="slide" aria-label="第 ' + (i + 2) + ' 张，' + escapeHtml(d.name) + '">' +
-            '<div class="dc-accent" style="background:' + DS_COLORS[i] + '"></div>' +
-            '<div class="dc-head"><span class="dc-icon">' + DS_ICONS[i] + '</span><span class="dc-title" style="color:' + DS_COLORS[i] + '">' + escapeHtml(d.name) + '</span><span class="dc-badge" style="background:' + DS_COLORS[i] + '">' + Math.round(d.weight * 100) + '%</span></div>' +
-            '<div class="dc-triggers">' + triggers + '</div>' +
-            '<div class="dc-example"><b>典型话术：</b>' + escapeHtml(DS_EXAMPLES[i]) + '</div>' +
-            '<div class="dc-desc">' + escapeHtml(DS_DESCS[i]) + '</div>' +
-            '<div class="dc-bar"><div class="dc-bar-fill" style="width:' + Math.round(d.weight * 100) + '%;background:' + DS_COLORS[i] + '"></div></div>' +
+      function buildCards() {
+        // 第 0 张：评分逻辑综合加权（饼图）
+        const r = 30, c = 2 * Math.PI * r;
+        let off = 0, segHtml = "", legendHtml = "";
+        for (let i = 0; i < DIMS.length; i++) {
+          const d = DIMS[i];
+          const seg = d.weight * c;
+          segHtml += '<circle cx="42" cy="42" r="' + r + '" fill="none" stroke="' + DS_COLORS[i] + '" stroke-width="11" stroke-dasharray="' + seg.toFixed(2) + ' ' + (c - seg).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 42 42)" />';
+          off += seg;
+          legendHtml += '<span><i style="background:' + DS_COLORS[i] + '"></i>' + escapeHtml(d.name) + ' ' + Math.round(d.weight * 100) + '%</span>';
+        }
+        let html =
+          '<div class="ds-card" role="group" aria-label="评分逻辑" style="--card-color:#8a8a8a">' +
+            '<div class="dc-head"><span class="dc-icon">🧮</span><span class="dc-title">评分逻辑</span><span class="dc-badge" style="background:#8a8a8a">综合加权</span></div>' +
+            '<div class="dc-intro">AI 扫描全文 7 个维度，按权重加权得出风险等级。</div>' +
+            '<div class="dc-chart">' +
+              '<svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true">' + segHtml + '<circle cx="42" cy="42" r="16" fill="#fff"/></svg>' +
+              '<div class="dc-legend">' + legendHtml + '</div>' +
+            '</div>' +
+            '<div class="dc-levels">' +
+              '<span style="background:#e8f5e9;color:#1f9d55">低：无明显营销</span>' +
+              '<span style="background:#fff7ed;color:#9a3412">中：部分话术命中</span>' +
+              '<span style="background:#fff0f2;color:#d6293f">高：多维度或重度</span>' +
+            '</div>' +
           '</div>';
-      }
-      stage.innerHTML = html;
-      const cardEls = Array.from(stage.querySelectorAll(".ds-card"));
 
-      // 分页点
-      let dotsHtml = "";
-      for (let i = 0; i < total; i++) dotsHtml += '<button data-idx="' + i + '" aria-label="跳到第 ' + (i + 1) + ' 张"></button>';
-      dots.innerHTML = dotsHtml;
-      const dotEls = Array.from(dots.querySelectorAll("button"));
+        // 第 1-7 张：各维度
+        for (let i = 0; i < DIMS.length; i++) {
+          const d = DIMS[i];
+          const triggers = DS_TRIGGERS[i].map(t => '<span>' + escapeHtml(t) + '</span>').join("");
+          html +=
+            '<div class="ds-card" role="group" aria-label="' + escapeHtml(d.name) + '" style="--card-color:' + DS_COLORS[i] + ';--tag-bg:' + DS_COLORS[i] + '15;--tag-color:' + DS_COLORS[i] + '">' +
+              '<div class="dc-head"><span class="dc-icon">' + DS_ICONS[i] + '</span><span class="dc-title" style="color:' + DS_COLORS[i] + '">' + escapeHtml(d.name) + '</span><span class="dc-badge" style="background:' + DS_COLORS[i] + '">' + Math.round(d.weight * 100) + '%</span></div>' +
+              '<div class="dc-triggers">' + triggers + '</div>' +
+              '<div class="dc-example"><b>典型话术：</b>' + escapeHtml(DS_EXAMPLES[i]) + '</div>' +
+              '<div class="dc-desc">' + escapeHtml(DS_DESCS[i]) + '</div>' +
+              '<div class="dc-bar"><div class="dc-bar-fill" style="width:' + Math.round(d.weight * 100) + '%;background:' + DS_COLORS[i] + '"></div></div>' +
+            '</div>';
+        }
+        return html;
+      }
 
-      let active = 0;
-      function transformFor(o) {
-        const big = window.innerWidth > 640;
-        const d1 = big ? 208 : 126, d2 = big ? 352 : 212, d3 = big ? 456 : 268;
-        const rot1 = big ? 42 : 36, rot2 = big ? 50 : 42;
-        if (o === 0) return { t: "translateX(0px) translateZ(90px) rotateY(0deg) scale(1.14)", op: 1, z: 30 };
-        if (o === -1) return { t: "translateX(" + (-d1) + "px) translateZ(0) rotateY(" + rot1 + "deg) scale(.9)", op: .82, z: 20 };
-        if (o === 1) return { t: "translateX(" + d1 + "px) translateZ(0) rotateY(" + (-rot1) + "deg) scale(.9)", op: .82, z: 20 };
-        if (o === -2) return { t: "translateX(" + (-d2) + "px) translateZ(-90px) rotateY(" + rot2 + "deg) scale(.78)", op: .42, z: 10 };
-        if (o === 2) return { t: "translateX(" + d2 + "px) translateZ(-90px) rotateY(" + (-rot2) + "deg) scale(.78)", op: .42, z: 10 };
-        const dx = o < 0 ? -d3 : d3, rot = o < 0 ? 56 : -56;
-        return { t: "translateX(" + dx + "px) translateZ(-170px) rotateY(" + rot + "deg) scale(.66)", op: 0, z: 1 };
+      // 复制两份实现无缝循环
+      const cardsHtml = buildCards();
+      track.innerHTML = cardsHtml + cardsHtml;
+
+      // 计算单份宽度（8 张卡片 + 7 个 gap）
+      function measureWidth() {
+        const allCards = track.querySelectorAll(".ds-card");
+        let w = 0;
+        for (let i = 0; i < 8 && i < allCards.length; i++) {
+          w += allCards[i].offsetWidth;
+          if (i < 7) w += 12; // gap
+        }
+        return w || 1;
       }
-      function layout() {
-        cardEls.forEach((el, i) => {
-          const o = i - active;
-          const s = transformFor(o);
-          el.style.transform = s.t;
-          el.style.opacity = s.op;
-          el.style.zIndex = s.z;
-          el.style.pointerEvents = Math.abs(o) > 2 ? "none" : "auto";
-          el.classList.toggle("is-center", o === 0);
-          el.setAttribute("aria-hidden", o === 0 ? "false" : "true");
-        });
-        dotEls.forEach((b, i) => b.classList.toggle("active", i === active));
-        prevBtn.disabled = active === 0;
-        nextBtn.disabled = active === total - 1;
+      let contentWidth = measureWidth();
+
+      let x = 0;
+      let speed = 0.55;
+      let isDragging = false;
+      let startPointerX = 0, startX = 0;
+      let rafId = null;
+
+      function setTransform(v) { track.style.transform = "translateX(" + v + "px)"; }
+
+      function loop() {
+        if (!isDragging) {
+          x -= speed;
+          if (x <= -contentWidth) x += contentWidth;
+          setTransform(x);
+        }
+        rafId = requestAnimationFrame(loop);
       }
-      function go(p) { active = Math.max(0, Math.min(total - 1, p)); layout(); }
-      prevBtn.addEventListener("click", () => go(active - 1));
-      nextBtn.addEventListener("click", () => go(active + 1));
-      dots.addEventListener("click", (e) => {
-        const b = e.target.closest("button[data-idx]");
-        if (b) go(parseInt(b.dataset.idx, 10));
+
+      function startDrag(px) {
+        isDragging = true;
+        startPointerX = px;
+        startX = x;
+        strip.classList.add("is-dragging");
+        track.style.transition = "none";
+      }
+      function moveDrag(px) {
+        if (!isDragging) return;
+        x = startX + (px - startPointerX);
+        while (x <= -contentWidth) x += contentWidth;
+        while (x > 0) x -= contentWidth;
+        setTransform(x);
+      }
+      function endDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+        strip.classList.remove("is-dragging");
+      }
+
+      strip.addEventListener("mousedown", e => { e.preventDefault(); startDrag(e.clientX); });
+      window.addEventListener("mousemove", e => moveDrag(e.clientX));
+      window.addEventListener("mouseup", endDrag);
+      strip.addEventListener("touchstart", e => startDrag(e.touches[0].clientX), { passive: false });
+      window.addEventListener("touchmove", e => moveDrag(e.touches[0].clientX), { passive: false });
+      window.addEventListener("touchend", endDrag);
+
+      window.addEventListener("resize", () => {
+        contentWidth = measureWidth();
+        while (x <= -contentWidth) x += contentWidth;
+        while (x > 0) x -= contentWidth;
+        setTransform(x);
       });
-      cardEls.forEach((el, i) => {
-        el.addEventListener("click", () => {
-          const o = i - active;
-          if (o !== 0) go(active + (o > 0 ? 1 : -1));  // 点哪侧就往那侧走一步，让被点卡片转正到 C 位
-        });
-      });
-      window.addEventListener("resize", () => layout());
-      // 入场动画：卡片从右侧飞入归位
-      cardEls.forEach((el) => { el.style.transform = "translateX(456px) translateZ(-170px) rotateY(-56deg) scale(.66)"; el.style.opacity = 0; });
-      requestAnimationFrame(() => requestAnimationFrame(layout));
+
+      rafId = requestAnimationFrame(loop);
     }
     initDimCarousel();
 
