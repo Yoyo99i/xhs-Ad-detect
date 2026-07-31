@@ -243,6 +243,35 @@
     }
     .share-actions button.ghost { background: #fff; color: var(--red); }
     .share-actions button:disabled { opacity: .6; cursor: default; }
+
+    /* ===== S3.1 移动端响应式（≤480px） ===== */
+    @media (max-width: 480px) {
+      header { padding: 14px 14px; }
+      header h1 { font-size: 18px; }
+      header p { font-size: 12px; margin: 4px 0 0; }
+      main { padding: 14px 12px 48px; }
+      label { font-size: 14px; margin: 12px 0 6px; }
+      textarea { min-height: 140px; font-size: 16px; padding: 10px; }  /* 16px 防止 iOS 聚焦自动放大 */
+      button#btn { padding: 14px; font-size: 16px; }
+      .card { padding: 14px 14px; }
+      .card h2 { font-size: 15px; }
+      .verdict-note { font-size: 11px; }
+      .tips-card::before { font-size: 14px; }
+      .modal-card { padding: 18px 16px 16px; min-height: auto; max-height: 90vh; }
+      .modal-card h2 { font-size: 16px; }
+      .modal-body { font-size: 13px; }
+      .share-actions { flex-direction: column; }
+      .share-actions button { width: 100%; }
+      #disclaimer { font-size: 11px; padding-top: 12px; }
+      .demo-btns button { font-size: 12px; padding: 5px 10px; }
+      .dim-name { font-size: 13px; }
+      .dim-evi, .dim-note { font-size: 12px; }
+    }
+
+    /* 动效偏好：尊重 prefers-reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+    }
   </style>
 </head>
 <body>
@@ -267,7 +296,7 @@
     <div class="meta">最多 5000 字 · 仅用于本次分析，不存储、不用于训练</div>
 
     <button id="btn">开始检测</button>
-    <div id="status"></div>
+    <div id="status" aria-live="polite" role="status"></div>
 
     <div id="result">
       <div class="result-head">📋 检测报告</div>
@@ -646,6 +675,7 @@
 
     let pollTimer = null;
     let pollStartAt = 0;
+    const POLL_TIMEOUT_MS = 60000; // 60 秒超时保护，避免无限轮询
     async function pollStatus(taskId) {
       try {
         const resp = await fetch("/api/status?taskId=" + encodeURIComponent(taskId));
@@ -659,19 +689,36 @@
           return;
         }
         if (data.status === "error") {
-          setStatus("分析失败：" + (data.error || "未知错误"), true);
+          setStatus("分析失败：" + (data.error || "未知错误") + "，请重试", true);
           btn.disabled = false;
           btn.textContent = "开始检测";
           return;
         }
-        // running：每秒更新一次等待时间
-        const sec = Math.round((Date.now() - pollStartAt) / 1000);
-        setStatus("分析中，已等待 " + sec + " 秒…");
+        // 超时保护：超过 60 秒仍未出结果，提示用户并停止轮询
+        const elapsed = Date.now() - pollStartAt;
+        if (elapsed >= POLL_TIMEOUT_MS) {
+          setStatus("分析时间较长（已超过 60 秒），请稍后点击下方按钮重试，或直接刷新页面", true);
+          btn.disabled = false;
+          btn.textContent = "重新检测";
+          return;
+        }
+        // running：每秒更新一次等待时间（分阶段友好文案）
+        const sec = Math.round(elapsed / 1000);
+        let phase = "正在分析中，已等待 " + sec + " 秒…";
+        if (sec < 10) phase = "正在启动分析引擎，已等待 " + sec + " 秒…";
+        else if (sec < 30) phase = "AI 正在研判话术浓度，已等待 " + sec + " 秒…";
+        else phase = "分析仍在进行（内容较多），已等待 " + sec + " 秒…";
+        setStatus(phase);
         pollTimer = setTimeout(() => pollStatus(taskId), 1000);
       } catch (e) {
-        setStatus("轮询出错：" + e.message + "（仍在重试）", true);
-        btn.disabled = false;
-        btn.textContent = "开始检测";
+        setStatus("网络波动，正在自动重试（" + e.message + "）", true);
+        // 网络错误也纳入超时保护
+        if (Date.now() - pollStartAt >= POLL_TIMEOUT_MS) {
+          setStatus("网络连接不稳定，请检查网络后点击下方按钮重试", true);
+          btn.disabled = false;
+          btn.textContent = "重新检测";
+          return;
+        }
         pollTimer = setTimeout(() => pollStatus(taskId), 1000);
       }
     }
@@ -713,9 +760,9 @@
         pollStartAt = Date.now();
         pollStatus(data.taskId);
       } catch (e) {
-        setStatus("网络或服务器错误：" + e.message, true);
+        setStatus("网络或服务器错误：" + e.message + "，请检查网络后重试", true);
         btn.disabled = false;
-        btn.textContent = "开始检测";
+        btn.textContent = "重新检测";
       }
     }
 
