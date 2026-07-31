@@ -380,6 +380,13 @@
       user-select: none;
       position: relative;
       overflow: hidden;
+      transition: transform .45s cubic-bezier(.22,.61,.36,1), box-shadow .35s ease, opacity .35s ease;
+      transform-origin: center center;
+      will-change: transform;
+    }
+    .ds-card.is-center {
+      box-shadow: 0 14px 34px rgba(20,20,40,0.16);
+      z-index: 5;
     }
     .ds-card::before {
       content: "";
@@ -395,8 +402,22 @@
     .ds-card .dc-example { font-size: 11px; color: #555; background: #f6f7f9; padding: 6px 8px; border-radius: 8px; margin-top: 8px; line-height: 1.5; }
     .ds-card .dc-example b { color: var(--ink); font-weight: 600; }
     .ds-card .dc-desc { font-size: 11.5px; color: #555; line-height: 1.55; margin-top: 8px; }
-    .ds-card .dc-bar { height: 4px; background: #f0f0f0; border-radius: 999px; overflow: hidden; margin-top: 10px; }
-    .ds-card .dc-bar-fill { height: 100%; border-radius: 999px; }
+    .ds-card .dc-bar-row { display: flex; align-items: center; gap: 7px; margin-top: 10px; }
+    .ds-card .dc-bar { flex: 1; height: 6px; background: #f0f0f0; border-radius: 999px; overflow: hidden; }
+    .ds-card .dc-bar-fill { height: 100%; border-radius: 999px; width: 0%; transition: width .8s cubic-bezier(.22,.61,.36,1); }
+    .ds-card .dc-bar-pct { flex: none; font-size: 10px; font-weight: 600; color: var(--card-color,#888); min-width: 26px; text-align: right; }
+    .ds-card .dc-contrib {
+      max-height: 0; opacity: 0; overflow: hidden;
+      margin-top: 0;
+      font-size: 10.5px; color: #666;
+      background: #f7f8fa; border-radius: 8px;
+      transition: max-height .4s ease, opacity .3s ease, margin-top .3s ease, padding .3s ease;
+      padding: 0 8px;
+    }
+    .ds-card.is-center .dc-contrib.open {
+      max-height: 60px; opacity: 1; margin-top: 8px; padding: 7px 8px;
+    }
+    .ds-card .dc-contrib b { color: var(--ink); font-weight: 700; }
     .ds-card .dc-chart { display: flex; flex-direction: column; align-items: center; margin: 2px 0 4px; }
     .ds-card .dc-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; width: 100%; margin-top: 6px; font-size: 10px; }
     .ds-card .dc-legend span { display: flex; align-items: center; gap: 4px; color: #444; }
@@ -441,7 +462,7 @@
       .ds-card .dc-triggers span { font-size: 9px; padding: 1px 5px; }
       .ds-card .dc-example { font-size: 10px; padding: 5px 7px; margin-top: 6px; }
       .ds-card .dc-desc { font-size: 10.5px; margin-top: 6px; }
-      .ds-card .dc-bar { margin-top: 8px; }
+      .ds-card .dc-bar-row { margin-top: 8px; }
     }
 
     /* 动效偏好：尊重 prefers-reduced-motion */
@@ -831,11 +852,14 @@
       "“手慢无，最后 100 单”“不买真的亏大了”"
     ];
 
-    // 评分维度说明：单行横向循环滚动条（自动滚动 + 鼠标拖拽）
+    // 评分维度说明：手动拖拽横向卡片条，C 位卡片放大高亮并展开加权贡献
+    const LEVEL_PCT = { "轻": 33, "中": 66, "重": 100 };
     function initDimCarousel() {
       const strip = document.getElementById("ds-strip");
       const track = document.getElementById("ds-track");
       if (!track || !strip) return;
+
+      const CARD_GAP = 12;
 
       function buildCards() {
         // 第 0 张：评分逻辑综合加权（饼图）
@@ -849,9 +873,9 @@
           legendHtml += '<span><i style="background:' + DS_COLORS[i] + '"></i>' + escapeHtml(d.name) + ' ' + Math.round(d.weight * 100) + '%</span>';
         }
         let html =
-          '<div class="ds-card" role="group" aria-label="评分逻辑" style="--card-color:#8a8a8a">' +
+          '<div class="ds-card" data-dim="" role="group" aria-label="评分逻辑" style="--card-color:#8a8a8a">' +
             '<div class="dc-head"><span class="dc-icon">🧮</span><span class="dc-title">评分逻辑</span><span class="dc-badge" style="background:#8a8a8a">综合加权</span></div>' +
-            '<div class="dc-intro">AI 扫描全文 7 个维度，按权重加权得出风险等级。</div>' +
+            '<div class="dc-intro">AI 扫描全文 7 个维度，按权重加权得出风险等级。权重越高，对结果影响越大。</div>' +
             '<div class="dc-chart">' +
               '<svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true">' + segHtml + '<circle cx="42" cy="42" r="16" fill="#fff"/></svg>' +
               '<div class="dc-legend">' + legendHtml + '</div>' +
@@ -863,90 +887,189 @@
             '</div>' +
           '</div>';
 
-        // 第 1-7 张：各维度
+        // 第 1-7 张：各维度（进度条初始按权重显示，作为说明；出结果后由 applyResultToCards 覆盖）
         for (let i = 0; i < DIMS.length; i++) {
           const d = DIMS[i];
+          const wPct = Math.round(d.weight * 100);
           const triggers = DS_TRIGGERS[i].map(t => '<span>' + escapeHtml(t) + '</span>').join("");
           html +=
-            '<div class="ds-card" role="group" aria-label="' + escapeHtml(d.name) + '" style="--card-color:' + DS_COLORS[i] + ';--tag-bg:' + DS_COLORS[i] + '15;--tag-color:' + DS_COLORS[i] + '">' +
-              '<div class="dc-head"><span class="dc-icon">' + DS_ICONS[i] + '</span><span class="dc-title" style="color:' + DS_COLORS[i] + '">' + escapeHtml(d.name) + '</span><span class="dc-badge" style="background:' + DS_COLORS[i] + '">' + Math.round(d.weight * 100) + '%</span></div>' +
+            '<div class="ds-card" data-dim="' + escapeHtml(d.name) + '" role="group" aria-label="' + escapeHtml(d.name) + '" style="--card-color:' + DS_COLORS[i] + ';--tag-bg:' + DS_COLORS[i] + '15;--tag-color:' + DS_COLORS[i] + '">' +
+              '<div class="dc-head"><span class="dc-icon">' + DS_ICONS[i] + '</span><span class="dc-title" style="color:' + DS_COLORS[i] + '">' + escapeHtml(d.name) + '</span><span class="dc-badge" style="background:' + DS_COLORS[i] + '">' + wPct + '%</span></div>' +
               '<div class="dc-triggers">' + triggers + '</div>' +
               '<div class="dc-example"><b>典型话术：</b>' + escapeHtml(DS_EXAMPLES[i]) + '</div>' +
               '<div class="dc-desc">' + escapeHtml(DS_DESCS[i]) + '</div>' +
-              '<div class="dc-bar"><div class="dc-bar-fill" style="width:' + Math.round(d.weight * 100) + '%;background:' + DS_COLORS[i] + '"></div></div>' +
+              '<div class="dc-bar-row">' +
+                '<div class="dc-bar"><div class="dc-bar-fill" data-mode="weight" style="width:' + wPct + '%;background:' + DS_COLORS[i] + '"></div></div>' +
+                '<span class="dc-bar-pct">' + wPct + '%</span>' +
+              '</div>' +
+              '<div class="dc-contrib" data-contrib></div>' +
             '</div>';
         }
         return html;
       }
 
-      // 复制两份实现无缝循环
-      const cardsHtml = buildCards();
-      track.innerHTML = cardsHtml + cardsHtml;
+      track.innerHTML = buildCards();
+      const allCards = Array.from(track.querySelectorAll(".ds-card"));
+      const dimCards = allCards.filter(c => c.dataset.dim); // 7 张维度卡（不含第 0 张逻辑卡）
 
-      // 计算单份宽度（8 张卡片 + 7 个 gap）
-      function measureWidth() {
-        const allCards = track.querySelectorAll(".ds-card");
-        let w = 0;
-        for (let i = 0; i < 8 && i < allCards.length; i++) {
-          w += allCards[i].offsetWidth;
-          if (i < 7) w += 12; // gap
-        }
-        return w || 1;
+      // 测量：单卡宽 + 步进（卡宽 + gap）
+      function cardStep() {
+        const w = dimCards[0] ? dimCards[0].offsetWidth : 214;
+        return w + CARD_GAP;
       }
-      let contentWidth = measureWidth();
+      function measure() {
+        const w = dimCards[0] ? dimCards[0].offsetWidth : 214;
+        return { cardW: w, step: w + CARD_GAP, half: w / 2 };
+      }
 
-      let x = 0;
-      let speed = 0.55;
-      let isDragging = false;
-      let startPointerX = 0, startX = 0;
+      // 拖拽状态
+      let x = 0;                 // track 的 translateX
+      let dragging = false;
+      let startPX = 0, startX = 0;
+      let lastPX = 0, lastT = 0, velocity = 0;
       let rafId = null;
 
-      function setTransform(v) { track.style.transform = "translateX(" + v + "px)"; }
+      function setX(v) { track.style.transform = "translateX(" + v + "px)"; }
 
-      function loop() {
-        if (!isDragging) {
-          x -= speed;
-          if (x <= -contentWidth) x += contentWidth;
-          setTransform(x);
+      // 根据当前 x 计算每张卡离中心的距离，做连续 scale/opacity（动态感）
+      function applyCenterFX() {
+        const m = measure();
+        const center = strip.clientWidth / 2;
+        // 第 i 张(0-based) 当前左边缘位置
+        for (let i = 0; i < dimCards.length; i++) {
+          const cardCenter = -x + i * m.step + m.half;
+          const dist = Math.abs(cardCenter - center);
+          const norm = Math.min(dist / (m.step * 1.6), 1);
+          const scale = 1.08 - norm * 0.18;       // 1.08(中心) → 0.9(远)
+          const opacity = 1 - norm * 0.45;
+          const el = dimCards[i];
+          el.style.transform = "scale(" + scale.toFixed(3) + ")";
+          el.style.opacity = opacity.toFixed(2);
+          el.classList.toggle("is-center", dist < m.step * 0.5);
         }
-        rafId = requestAnimationFrame(loop);
       }
 
-      function startDrag(px) {
-        isDragging = true;
-        startPointerX = px;
-        startX = x;
+      function animateTo(targetX) {
+        if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          x = targetX; setX(x); applyCenterFX(); return;
+        }
+        const start = x, t0 = performance.now(), dur = 480;
+        cancelAnimationFrame(rafId);
+        function step(now) {
+          const p = Math.min((now - t0) / dur, 1);
+          const e = 1 - Math.pow(1 - p, 3); // easeOutCubic
+          x = start + (targetX - start) * e;
+          setX(x); applyCenterFX();
+          if (p < 1) rafId = requestAnimationFrame(step);
+        }
+        rafId = requestAnimationFrame(step);
+      }
+
+      // 松手后吸附到最近的 C 位卡片
+      function snap() {
+        const m = measure();
+        const center = strip.clientWidth / 2;
+        // 找离中心最近的那张维度卡索引
+        let best = 0, bestDist = Infinity;
+        for (let i = 0; i < dimCards.length; i++) {
+          const cardCenter = -x + i * m.step + m.half;
+          const d = Math.abs(cardCenter - center);
+          if (d < bestDist) { bestDist = d; best = i; }
+        }
+        // 让第 best 张中心对准 strip 中心
+        const targetX = -(best * m.step + m.half - center);
+        // 叠加速度惯性（最多再偏移 0.6 步）
+        const inertia = Math.max(-0.6, Math.min(0.6, velocity * 0.12));
+        const vIdx = Math.round(best + inertia);
+        const vClamped = Math.max(0, Math.min(dimCards.length - 1, vIdx));
+        const finalX = -(vClamped * m.step + m.half - center);
+        animateTo(finalX);
+      }
+
+      function onDown(px) {
+        dragging = true;
+        startPX = px; lastPX = px; startX = x; lastT = performance.now(); velocity = 0;
         strip.classList.add("is-dragging");
+        cancelAnimationFrame(rafId);
         track.style.transition = "none";
       }
-      function moveDrag(px) {
-        if (!isDragging) return;
-        x = startX + (px - startPointerX);
-        while (x <= -contentWidth) x += contentWidth;
-        while (x > 0) x -= contentWidth;
-        setTransform(x);
+      function onMove(px) {
+        if (!dragging) return;
+        x = startX + (px - startPX);
+        const now = performance.now();
+        const dt = now - lastT;
+        if (dt > 0) velocity = (px - lastPX) / dt; // px/ms
+        lastPX = px; lastT = now;
+        setX(x); applyCenterFX();
       }
-      function endDrag() {
-        if (!isDragging) return;
-        isDragging = false;
+      function onUp() {
+        if (!dragging) return;
+        dragging = false;
         strip.classList.remove("is-dragging");
+        snap();
       }
 
-      strip.addEventListener("mousedown", e => { e.preventDefault(); startDrag(e.clientX); });
-      window.addEventListener("mousemove", e => moveDrag(e.clientX));
-      window.addEventListener("mouseup", endDrag);
-      strip.addEventListener("touchstart", e => startDrag(e.touches[0].clientX), { passive: false });
-      window.addEventListener("touchmove", e => moveDrag(e.touches[0].clientX), { passive: false });
-      window.addEventListener("touchend", endDrag);
+      strip.addEventListener("mousedown", e => { e.preventDefault(); onDown(e.clientX); });
+      window.addEventListener("mousemove", e => onMove(e.clientX));
+      window.addEventListener("mouseup", onUp);
+      strip.addEventListener("touchstart", e => onDown(e.touches[0].clientX), { passive: true });
+      strip.addEventListener("touchmove", e => { onMove(e.touches[0].clientX); }, { passive: true });
+      strip.addEventListener("touchend", onUp);
 
-      window.addEventListener("resize", () => {
-        contentWidth = measureWidth();
-        while (x <= -contentWidth) x += contentWidth;
-        while (x > 0) x -= contentWidth;
-        setTransform(x);
+      strip.addEventListener("click", e => {
+        const card = e.target.closest(".ds-card");
+        if (!card || !card.dataset.dim) return;
+        const idx = dimCards.indexOf(card);
+        if (idx < 0) return;
+        const m = measure();
+        const center = strip.clientWidth / 2;
+        animateTo(-(idx * m.step + m.half - center));
       });
 
-      rafId = requestAnimationFrame(loop);
+      window.addEventListener("resize", () => { applyCenterFX(); });
+
+      // 初始：让第 0 张维度卡居中
+      (function initPos() {
+        const m = measure();
+        const center = strip.clientWidth / 2;
+        x = -(0 * m.step + m.half - center);
+        setX(x); applyCenterFX();
+      })();
+
+      // 暴露给检测结果：把命中程度/贡献注入对应卡片
+      window.__applyResultToCards = function (hits) {
+        // hits: { 维度名: { level:'轻|中|重', contrib: 12 } }
+        for (const card of dimCards) {
+          const name = card.dataset.dim;
+          const hit = hits[name];
+          const fill = card.querySelector(".dc-bar-fill");
+          const pctEl = card.querySelector(".dc-bar-pct");
+          const contribEl = card.querySelector("[data-contrib]");
+          if (!hit) {
+            // 未命中：进度条归 0，贡献区清空
+            fill.style.width = "0%";
+            fill.dataset.mode = "hit";
+            pctEl.textContent = "未命中";
+            pctEl.style.color = "#aaa";
+            contribEl.innerHTML = "";
+            contribEl.classList.remove("open");
+            continue;
+          }
+          const lvl = hit.level || "中";
+          const pct = LEVEL_PCT[lvl] || 66;
+          fill.style.width = pct + "%";
+          fill.dataset.mode = "hit";
+          pctEl.textContent = (lvl === "轻" ? "轻" : lvl === "中" ? "中" : "重") + " " + pct + "%";
+          pctEl.style.color = "var(--card-color)";
+          const contrib = hit.contrib;
+          if (contrib != null && contrib !== "") {
+            contribEl.innerHTML = "加权贡献：<b>" + escapeHtml(String(contrib)) + "</b>（命中程度 × 维度权重）";
+          } else {
+            contribEl.innerHTML = "本篇命中程度：<b>" + (lvl === "轻" ? "轻度" : lvl === "中" ? "中度" : "重度") + "</b>";
+          }
+        }
+        applyCenterFX();
+      };
     }
     initDimCarousel();
 
@@ -984,17 +1107,19 @@
       );
     }
 
-    // 解析 AI 返回的命中维度（兼容证据带/不带外层引号的情况）
+    // 解析 AI 返回的命中维度（兼容证据带/不带外层引号的情况，并提取贡献百分比）
     function parseHits(detailMd) {
       const hits = {};
       const lines = (detailMd || "").split(/\n+/).map(l => l.trim()).filter(Boolean);
       for (const line of lines) {
-        const m = line.match(/^(.*?)[\（(]程度[:：]\s*(轻|中|重)[\）)]\s*[:：]?\s*(.*)$/);
+        const m = line.match(/^(.*?)[\（(]程度[:：]\s*(轻|中|重)[\）)]\s*[:：]?\s*(.*?)(?:\s*[｜|]贡献[:：]?\s*(\d{1,3})\s*%)?$/);
         if (!m) continue;
         const rawName = m[1].replace(/^[-*•\d+．.、\s]+/, "").trim();
         const canonical = DIMS.find(d => d.name === rawName || rawName.includes(d.name) || d.name.includes(rawName));
         const key = canonical ? canonical.name : rawName;
-        hits[key] = { level: m[2], evidence: m[3].trim() };
+        const evidence = (m[3] || "").trim();
+        const contrib = m[4] ? m[4] : "";
+        hits[key] = { level: m[2], evidence: evidence, contrib: contrib };
       }
       return hits;
     }
@@ -1076,6 +1201,11 @@
 
       detailBody.innerHTML = renderDimensions(detailMd);
       details.open = false;
+
+      // 把命中结果注入底部维度卡（进度条=命中程度，C 位卡展开加权贡献）
+      if (typeof window.__applyResultToCards === "function") {
+        window.__applyResultToCards(parseHits(detailMd));
+      }
 
       // 渲染风险结论 Hero（核心结论一眼可见）
       buildVerdict(summaryMd);
