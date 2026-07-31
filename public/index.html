@@ -389,18 +389,25 @@
     .ds-strip {
       position: relative;
       overflow: hidden;
-      cursor: grab;
       margin-top: 8px;
-      /* 突破 main 宽度，铺满整个视口；标题(db-head)仍在 main 内对齐 */
-      width: 100vw;
-      margin-left: calc(50% - 50vw);
-      /* 左右淡入淡出，让循环更自然 */
-      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 3%, #000 97%, transparent 100%);
-      mask-image: linear-gradient(90deg, transparent 0%, #000 3%, #000 97%, transparent 100%);
+      padding: 6px 0 8px;
     }
-    /* 拖拽中：卡片缩放/透明度即时跟随，不滞后（解决"手感怪"） */
-    .ds-strip.is-dragging .ds-card { transition: none; }
-    .ds-strip.is-dragging { cursor: grabbing; }
+    /* 左右翻页箭头 */
+    .ds-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 38px; height: 38px; border-radius: 50%;
+      background: #fff; border: 1px solid var(--line, #e5e5e5);
+      box-shadow: 0 2px 10px rgba(20,20,40,0.10);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 30;
+      color: var(--ink, #1a1a1a);
+      transition: background .2s ease, color .2s ease, border-color .2s ease, opacity .2s ease;
+    }
+    .ds-nav:hover:not(:disabled) { background: var(--red, #E8362F); color: #fff; border-color: var(--red, #E8362F); }
+    .ds-nav:disabled { opacity: .3; cursor: not-allowed; }
+    .ds-nav svg { width: 19px; height: 19px; }
+    .ds-nav--prev { left: 4px; }
+    .ds-nav--next { right: 4px; }
     .ds-track {
       display: flex;
       gap: 26px;
@@ -577,10 +584,16 @@
     <aside class="dim-band" aria-label="评分维度说明">
       <div class="db-head">
         <span class="db-title">评分维度说明</span>
-        <span class="db-sub">左右滑动 · 划到中间看加权贡献</span>
+        <span class="db-sub">点击左右箭头翻页查看</span>
       </div>
       <div class="ds-strip" id="ds-strip">
+        <button class="ds-nav ds-nav--prev" id="ds-prev" aria-label="上一张" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
         <div class="ds-track" id="ds-track"></div>
+        <button class="ds-nav ds-nav--next" id="ds-next" aria-label="下一张" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
     </aside>
 
@@ -908,8 +921,6 @@
       const track = document.getElementById("ds-track");
       if (!track || !strip) return;
 
-      const CARD_GAP = 12;
-
       function buildCards() {
         // 第 0 张：评分逻辑综合加权（饼图）
         const r = 30, c = 2 * Math.PI * r;
@@ -961,38 +972,18 @@
       const allCards = Array.from(track.querySelectorAll(".ds-card"));
       const dimCards = allCards.filter(c => c.dataset.dim); // 7 张维度卡（不含第 0 张逻辑卡）
 
+      const CARD_GAP = 26;
+      const prevBtn = document.getElementById("ds-prev");
+      const nextBtn = document.getElementById("ds-next");
+      let currentIdx = Math.min(1, allCards.length - 1);  // 初始：第一张维度卡居中
+      let x = 0, rafId = null;
+
       // 测量：单卡宽 + 步进（卡宽 + gap）
-      // track 里有 8 张卡（1 张逻辑卡 + 7 张维度卡），统一按 allCards 索引处理
       function measure() {
         const w = allCards[0] ? allCards[0].offsetWidth : 208;
         return { cardW: w, step: w + CARD_GAP, half: w / 2 };
       }
-
-      // 拖拽状态
-      let x = 0;                 // track 的 translateX
-      let dragging = false;
-      let startPX = 0, startX = 0;
-      let lastPX = 0, lastT = 0, velocity = 0;   // velocity: px/ms
-      let downPX = 0, moved = false;
-      let justDragged = false;
-      let rafId = null;
-      let flinging = false;
-
-      function setX(v) { track.style.transform = "translate3d(" + v + "px)"; }
-
-      // 只高亮当前离中心最近的那一张卡，其余保持原样
-      function applyCenterFX() {
-        const m = measure();
-        const center = strip.clientWidth / 2;
-        let best = 0, bestDist = Infinity;
-        for (let i = 0; i < allCards.length; i++) {
-          const cardCenter = -x + i * m.step + m.half;
-          const dist = Math.abs(cardCenter - center);
-          if (dist < bestDist) { bestDist = dist; best = i; }
-          allCards[i].classList.remove("is-center");
-        }
-        allCards[best].classList.add("is-center");
-      }
+      function setX(v) { track.style.transform = "translate3d(" + v + "px,0,0)"; }
 
       // 某张卡居中时对应的 track translateX（按卡片实际中心对齐 strip 中心）
       function centerXFor(i) {
@@ -1001,11 +992,23 @@
         return -(i * m.step + m.half - center);
       }
 
+      // 只高亮当前卡，其余保持原样
+      function applyCenterFX() {
+        for (let i = 0; i < allCards.length; i++) {
+          allCards[i].classList.toggle("is-center", i === currentIdx);
+        }
+      }
+
+      // 更新左右箭头可用状态
+      function updateNav() {
+        if (prevBtn) prevBtn.disabled = currentIdx <= 0;
+        if (nextBtn) nextBtn.disabled = currentIdx >= allCards.length - 1;
+      }
+
+      // 平滑动画到目标位置
       function animateTo(targetX) {
         if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          x = targetX; setX(x); applyCenterFX();
-          strip.classList.remove("is-dragging"); flinging = false;
-          return;
+          x = targetX; setX(x); return;
         }
         const start = x, t0 = performance.now(), dur = 420;
         cancelAnimationFrame(rafId);
@@ -1013,110 +1016,45 @@
           const p = Math.min((now - t0) / dur, 1);
           const e = 1 - Math.pow(1 - p, 3); // easeOutCubic
           x = start + (targetX - start) * e;
-          setX(x); applyCenterFX();
+          setX(x);
           if (p < 1) rafId = requestAnimationFrame(step);
-          else { strip.classList.remove("is-dragging"); flinging = false; }
         }
         rafId = requestAnimationFrame(step);
       }
 
-      // 松手后：找离 strip 中心最近的卡（按卡片实际中心），吸附过去
-      function snap() {
-        const m = measure();
-        const center = strip.clientWidth / 2;
-        let best = 0, bestDist = Infinity;
-        for (let i = 0; i < allCards.length; i++) {
-          const cardCenter = -x + i * m.step + m.half;
-          const d = Math.abs(cardCenter - center);
-          if (d < bestDist) { bestDist = d; best = i; }
-        }
-        animateTo(centerXFor(best));
+      // 切换到第 idx 张（居中 + 高亮）
+      function goTo(idx) {
+        const clamped = Math.max(0, Math.min(allCards.length - 1, idx));
+        currentIdx = clamped;
+        applyCenterFX();
+        updateNav();
+        animateTo(centerXFor(currentIdx));
       }
 
-      // 惯性滑行：松手后按松手速度继续滑行一段（fling），到边界或速度耗尽后吸附
-      function fling() {
-        flinging = true;
-        const xMax = centerXFor(0);                       // 最右：第 0 张卡居中
-        const xMin = centerXFor(allCards.length - 1);     // 最左：最后一张卡居中
-        let v = velocity;                                 // px/ms
-        const friction = 0.95;                            // 每帧衰减
-        cancelAnimationFrame(rafId);
-        function step() {
-          v *= friction;
-          x += v * 16;                                    // 约 16ms / 帧
-          if (x > xMax) { x = xMax; v = 0; }
-          if (x < xMin) { x = xMin; v = 0; }
-          setX(x); applyCenterFX();
-          if (Math.abs(v) > 0.06) {
-            rafId = requestAnimationFrame(step);
-          } else {
-            snap();                                       // 滑行结束 → 吸附到最近卡
-          }
-        }
-        rafId = requestAnimationFrame(step);
-      }
+      if (prevBtn) prevBtn.addEventListener("click", () => goTo(currentIdx - 1));
+      if (nextBtn) nextBtn.addEventListener("click", () => goTo(currentIdx + 1));
 
-      function onDown(px) {
-        dragging = true;
-        moved = false;
-        startPX = px; downPX = px; lastPX = px; startX = x; lastT = performance.now(); velocity = 0;
-        strip.classList.add("is-dragging");
-        cancelAnimationFrame(rafId);
-      }
-      function onMove(px) {
-        if (!dragging) return;
-        if (Math.abs(px - downPX) > 4) moved = true;   // 阈值：区分点击与拖拽
-        x = startX + (px - startPX);
-        const now = performance.now();
-        const dt = now - lastT;
-        if (dt > 0) velocity = (px - lastPX) / dt; // px/ms
-        lastPX = px; lastT = now;
-        setX(x); applyCenterFX();
-      }
-      function onUp() {
-        if (!dragging) return;
-        dragging = false;
-        // 关键：松手前若已停住（>80ms 没动），速度视为 0，精确吸附当前卡（不甩）
-        if (performance.now() - lastT > 80) velocity = 0;
-        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (moved) {
-          justDragged = true;             // 屏蔽紧随的 click，避免二次动画
-          setTimeout(() => { justDragged = false; }, 120);
-          // 有明显甩动速度则惯性滑行，否则直接吸附
-          if (!reduceMotion && Math.abs(velocity) > 0.18) {
-            fling();
-          } else {
-            strip.classList.remove("is-dragging");
-            snap();
-          }
-        } else {
-          strip.classList.remove("is-dragging");
-        }
-      }
-
-      strip.addEventListener("mousedown", e => { e.preventDefault(); onDown(e.clientX); });
-      window.addEventListener("mousemove", e => onMove(e.clientX));
-      window.addEventListener("mouseup", onUp);
-      strip.addEventListener("touchstart", e => onDown(e.touches[0].clientX), { passive: true });
-      strip.addEventListener("touchmove", e => { onMove(e.touches[0].clientX); }, { passive: true });
-      strip.addEventListener("touchend", onUp);
-
-      // 刚拖拽松手后屏蔽 click，避免重复动画（justDragged 已在上方声明）
+      // 点击卡片本身也可切换到它
       strip.addEventListener("click", e => {
-        if (justDragged) return;            // 拖完不触发点击吸附
         const card = e.target.closest(".ds-card");
         if (!card) return;
         const idx = allCards.indexOf(card);
-        if (idx < 0) return;
-        animateTo(centerXFor(idx));
+        if (idx >= 0) goTo(idx);
       });
 
-      window.addEventListener("resize", () => { applyCenterFX(); });
+      // 键盘左右切换
+      strip.tabIndex = 0;
+      strip.addEventListener("keydown", e => {
+        if (e.key === "ArrowLeft") { e.preventDefault(); goTo(currentIdx - 1); }
+        else if (e.key === "ArrowRight") { e.preventDefault(); goTo(currentIdx + 1); }
+      });
 
-      // 初始：让第 1 张卡（第一张维度卡「推广未标明」）居中，左侧露出逻辑卡
+      window.addEventListener("resize", () => { setX(centerXFor(currentIdx)); applyCenterFX(); });
+
+      // 初始定位：第一张维度卡居中
       (function initPos() {
-        const startIdx = Math.min(1, allCards.length - 1);
-        animateTo(centerXFor(startIdx));
+        x = centerXFor(currentIdx);
+        setX(x); applyCenterFX(); updateNav();
       })();
 
       // 暴露给检测结果：把命中程度/贡献注入对应卡片
