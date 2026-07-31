@@ -1067,11 +1067,14 @@
           const fill = card.querySelector(".dc-bar-fill");
           const pctEl = card.querySelector(".dc-bar-pct");
           const contribEl = card.querySelector("[data-contrib]");
+          const COEF = { "轻": 0.5, "中": 1.0, "重": 1.5 };
+          const dimInfo = DIMS.find(d => d.name === name);
+          const weight = dimInfo ? dimInfo.weight : 0;
           if (!hit) {
             // 未命中：进度条归 0，贡献区清空
             fill.style.width = "0%";
             fill.dataset.mode = "hit";
-            pctEl.textContent = "未命中";
+            pctEl.textContent = "0%";
             pctEl.style.color = "#aaa";
             contribEl.innerHTML = "";
             contribEl.classList.remove("open");
@@ -1083,14 +1086,11 @@
           fill.style.width = pct + "%";
           fill.style.background = sevColor;
           fill.dataset.mode = "hit";
-          pctEl.textContent = (lvl === "轻" ? "轻" : lvl === "中" ? "中" : "重");
+          // 优先用 AI 返回的贡献百分比，否则按 系数 × 权重 兜底计算
+          const contribNum = (hit.contrib != null && hit.contrib !== "") ? parseInt(hit.contrib, 10) : Math.round(COEF[lvl] * weight * 100);
+          pctEl.textContent = contribNum + "%";
           pctEl.style.color = sevColor;
-          const contrib = hit.contrib;
-          if (contrib != null && contrib !== "") {
-            contribEl.innerHTML = "加权贡献：<b>" + escapeHtml(String(contrib)) + "</b>（命中程度 × 维度权重）";
-          } else {
-            contribEl.innerHTML = "本篇命中程度：<b>" + (lvl === "轻" ? "轻度" : lvl === "中" ? "中度" : "重度") + "</b>";
-          }
+          contribEl.innerHTML = "系数 <b>" + COEF[lvl] + "</b> × 权重 <b>" + Math.round(weight * 100) + "%</b> = 贡献 <b>" + contribNum + "%</b>";
         }
         applyCenterFX();
       };
