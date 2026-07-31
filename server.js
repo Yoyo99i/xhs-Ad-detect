@@ -46,7 +46,7 @@ function smtpSend({ from, to, subject, text }) {
     const socket = tls.connect(QQ_SMTP_PORT, QQ_SMTP_HOST, { rejectUnauthorized: true }, () => {
       let step = 0;
       let buf = "";
-      const send = (s) => socket.write(s + "\r\n");
+      const send = (s) => { console.log(`[smtp] > ${s.slice(0, 80)}${s.length > 80 ? "..." : ""}`); socket.write(s + "\r\n"); };
       const b64 = (s) => Buffer.from(s, "utf-8").toString("base64");
       const encodeSubject = (s) => `=?UTF-8?B?${b64(s)}?=`;
       // 把 base64 正文按 76 字符/行切分（RFC 2045 建议）
@@ -56,6 +56,7 @@ function smtpSend({ from, to, subject, text }) {
         if (!buf.includes("\r\n")) return;
         const line = buf.slice(0, buf.indexOf("\r\n"));
         buf = buf.slice(buf.indexOf("\r\n") + 2);
+        console.log(`[smtp] < ${line}`);
         const code = line.slice(0, 3);
         if (code[0] === "4" || code[0] === "5") { socket.destroy(); return reject(new Error("SMTP " + line)); }
         switch (step) {
@@ -347,7 +348,10 @@ const server = http.createServer(async (req, res) => {
       return json(res, 500, { error: "write failed", code: "WRITE_FAIL" });
     }
     // 异步发邮件通知（失败不影响前端返回，避免阻塞用户）
-    sendFeedbackMail(rec).catch((e) => console.error("[feedback] mail failed:", e && e.message));
+    sendFeedbackMail(rec).catch((e) => {
+      const detail = (e && (e.message || e.stack || JSON.stringify(e))) || String(e) || "unknown error";
+      console.error("[feedback] mail failed:", detail);
+    });
     return json(res, 200, { ok: true });
   }
 
