@@ -7,11 +7,27 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
+      /* 品牌色 */
       --red: #ff2e4d;
+      --red-dark: #d6293f;   /* 深红：用于错误/警示文字，满足 WCAG AA 4.5:1 对比度 */
+      --red-deep: #c81e3a;   /* 更深的 hover 态 */
       --red-soft: #fff0f2;
+      --red-grad-a: #ff5a73;
+      --red-grad-b: #ff2e4d;
+      /* 语义色 */
+      --success: #1f9d55;
+      --warning: #e0820b;
       --ink: #1f1f1f;
       --gray: #8a8a8a;
       --line: #ececec;
+      --bg: #fafafa;
+      /* 阴影层级 */
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+      --shadow-md: 0 6px 18px rgba(255,46,77,.10);
+      --shadow-lg: 0 16px 40px rgba(0,0,0,.14);
+      /* 圆角 */
+      --radius: 12px;
+      --radius-sm: 10px;
     }
     * { box-sizing: border-box; }
     body {
@@ -22,13 +38,33 @@
       line-height: 1.7;
     }
     header {
-      background: var(--red);
+      background: linear-gradient(135deg, var(--red-grad-a), var(--red-grad-b));
       color: #fff;
-      padding: 18px 20px;
+      padding: 22px 20px 18px;
       text-align: center;
     }
-    header h1 { margin: 0; font-size: 20px; }
-    header p { margin: 6px 0 0; font-size: 13px; opacity: .9; }
+    header .logo { font-size: 26px; line-height: 1; margin-bottom: 6px; }
+    header h1 { margin: 0; font-size: 20px; letter-spacing: .5px; }
+    header p { margin: 6px 0 0; font-size: 13px; opacity: .92; }
+
+    /* 首屏信任锚点：三栏价值卡片 */
+    .value-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 16px 0 4px;
+    }
+    .value-item {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 12px 10px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .value-item .vi-icon { font-size: 20px; }
+    .value-item .vi-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-top: 4px; }
+    .value-item .vi-desc { font-size: 11px; color: var(--gray); margin-top: 2px; line-height: 1.5; }
     main { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
     label { display: block; font-weight: 600; margin: 16px 0 8px; font-size: 15px; }
     .demo-wrap { margin: 10px 0 6px; }
@@ -55,7 +91,9 @@
       font-family: inherit;
     }
     textarea:focus { outline: none; border-color: var(--red); }
-    .meta { font-size: 12px; color: var(--gray); margin-top: 6px; }
+    .meta { font-size: 12px; color: var(--gray); margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; }
+    .meta #counter { color: var(--ink); }
+    .meta #counter.over { color: var(--red-dark); font-weight: 600; }
     button#btn {
       margin-top: 14px;
       width: 100%;
@@ -69,12 +107,22 @@
       cursor: pointer;
     }
     button#btn:disabled { background: #ffb3bf; cursor: not-allowed; }
+    button#btn:hover:not(:disabled) { background: var(--red-deep); box-shadow: var(--shadow-md); transform: translateY(-1px); }
     #status {
       margin-top: 14px;
       font-size: 14px;
-      color: var(--red);
+      color: var(--gray);
       min-height: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+    #status .spin {
+      width: 13px; height: 13px; border-radius: 50%;
+      border: 2px solid var(--line); border-top-color: var(--red);
+      animation: spin .8s linear infinite; flex: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     #waiting-tips {
       margin-top: 14px;
       background: #fff;
@@ -108,6 +156,28 @@
     #waiting-tips li { margin-bottom: 4px; }
     #waiting-tips .weight { color: var(--red); font-weight: 700; }
     #result { margin-top: 22px; display: none; }
+    /* 风险结论 Hero：让核心结论一眼可见，替代纯 Markdown 文字 */
+    .verdict-hero {
+      display: flex; align-items: center; gap: 14px;
+      border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px;
+      background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+    }
+    .verdict-hero .vh-badge {
+      flex: none; width: 62px; height: 62px; border-radius: 50%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #fff; font-weight: 800; line-height: 1.05;
+    }
+    .verdict-hero .vh-badge .vh-lv { font-size: 20px; }
+    .verdict-hero .vh-badge .vh-sub { font-size: 10px; font-weight: 500; opacity: .92; }
+    .verdict-hero .vh-badge.lv-high { background: var(--red); }
+    .verdict-hero .vh-badge.lv-mid { background: var(--warning); }
+    .verdict-hero .vh-badge.lv-low { background: var(--success); }
+    .verdict-hero .vh-text { min-width: 0; }
+    .verdict-hero .vh-title { font-size: 15px; font-weight: 700; color: var(--ink); }
+    .verdict-hero .vh-concl { font-size: 13px; color: var(--gray); margin-top: 3px; line-height: 1.6; }
+    .verdict-hero.lv-high { border-color: #ffd0d7; }
+    .verdict-hero.lv-mid { border-color: #ffe2bf; }
+    .verdict-hero.lv-low { border-color: #cdeed8; }
     .card {
       background: #fff;
       border: 1px solid var(--line);
@@ -195,7 +265,7 @@
       border-top: 1px dashed var(--line);
       padding-top: 14px;
     }
-    .err { color: var(--red); font-weight: 600; }
+    .err { color: var(--red-dark); font-weight: 600; }
 
     /* Toast 提示（复制成功等） */
     #toast {
@@ -282,6 +352,11 @@
       header h1 { font-size: 18px; }
       header p { font-size: 12px; margin: 4px 0 0; }
       main { padding: 14px 12px 48px; }
+      .value-strip { gap: 8px; margin: 12px 0 2px; }
+      .value-item { padding: 10px 6px; }
+      .value-item .vi-icon { font-size: 18px; }
+      .value-item .vi-title { font-size: 12px; }
+      .value-item .vi-desc { font-size: 10px; }
       label { font-size: 14px; margin: 12px 0 6px; }
       textarea { min-height: 140px; font-size: 16px; padding: 10px; }  /* 16px 防止 iOS 聚焦自动放大 */
       button#btn { padding: 14px; font-size: 16px; }
@@ -310,11 +385,30 @@
 </head>
 <body>
     <header>
+    <div class="logo">🌱</div>
     <h1>种草甄别</h1>
     <p>粘贴小红书笔记正文，AI 帮您识别疑似营销话术浓度</p>
   </header>
 
   <main>
+    <div class="value-strip">
+      <div class="value-item">
+        <div class="vi-icon">🔒</div>
+        <div class="vi-title">隐私优先</div>
+        <div class="vi-desc">不存储、不训练<br>仅本次分析</div>
+      </div>
+      <div class="value-item">
+        <div class="vi-icon">🧮</div>
+        <div class="vi-title">7 维智能评分</div>
+        <div class="vi-desc">逐句识别话术<br>权重加权判定</div>
+      </div>
+      <div class="value-item">
+        <div class="vi-icon">⚡</div>
+        <div class="vi-title">AI 秒级研判</div>
+        <div class="vi-desc">一分钟出报告<br>附证据原文</div>
+      </div>
+    </div>
+
     <label for="note">粘贴小红书笔记正文</label>
     <textarea id="note" placeholder="把小红书笔记的正文粘贴到这里（最多 5000 字）…"></textarea>
 
@@ -327,13 +421,14 @@
       </div>
     </div>
 
-    <div class="meta">最多 5000 字 · 仅用于本次分析，不存储、不用于训练</div>
+    <div class="meta"><span>最多 5000 字 · 仅用于本次分析，不存储、不用于训练</span><span id="counter">0 / 5000</span></div>
 
     <button id="btn">开始检测</button>
     <div id="status" aria-live="polite" role="status"></div>
     <div id="waiting-tips" style="display:none" aria-hidden="true"></div>
 
     <div id="result">
+      <div id="verdict" class="verdict-hero"></div>
       <div class="result-head">📋 检测报告</div>
       <div class="card-label">下方红框即「风险结论 / 一句话判断」；再往下可展开看命中维度明细</div>
       <div class="verdict-note">以下为 AI 对「疑似营销话术」的识别结论，可信度待您自行判断，仅供参考。</div>
@@ -473,12 +568,29 @@
     const shareWrap = document.getElementById("share-wrap");
     const sharePlaceholder = document.getElementById("share-placeholder");
     const toastEl = document.getElementById("toast");
+    const counterEl = document.getElementById("counter");
+    const verdictEl = document.getElementById("verdict");
+    const MAX_CHARS = 5000;
     let lastReport = null;
     let toastTimer = null;
 
-    function setStatus(msg, isErr) {
-      statusEl.textContent = msg || "";
-      statusEl.className = isErr ? "err" : "";
+    // 实时字数统计（符合用户习惯：随时知道用量、避免超限）
+    function updateCounter() {
+      const n = note.value.length;
+      counterEl.textContent = n + " / " + MAX_CHARS;
+      counterEl.classList.toggle("over", n > MAX_CHARS);
+    }
+    note.addEventListener("input", updateCounter);
+
+    function setStatus(msg, isErr, loading) {
+      const m = msg || "";
+      if (loading) {
+        statusEl.innerHTML = '<span class="spin"></span><span>' + escapeHtml(m) + '</span>';
+        statusEl.className = "";
+      } else {
+        statusEl.textContent = m;
+        statusEl.className = isErr ? "err" : "";
+      }
     }
 
     function showToast(msg, duration) {
@@ -656,6 +768,7 @@
       shareWrap.style.display = "none";
       sharePlaceholder.style.display = "";
       if (!md) {
+        verdictEl.innerHTML = "";
         summaryEl.innerHTML = '<p class="err">未获取到分析内容，请重试或更换笔记后再次检测。</p>';
         tipsEl.style.display = "none";
         tipsEl.innerHTML = "";
@@ -725,12 +838,31 @@
 
     // 从摘要/评分依据解析出"复制文字结果"所需字段（合规要求：不再生成带本站网址的分享图片）
     const LEVEL_COLOR = { "高": "#ff2e4d", "中": "#f5a623", "低": "#2bb673" };
+    const LEVEL_LABEL = { "高": "高风险", "中": "中风险", "低": "低风险" };
+
+    // 风险结论 Hero：等级圆形徽章 + 一句话结论，让核心判断一眼可见
+    function renderVerdict(level, conclusion) {
+      const lv = LEVEL_LABEL[level] || LEVEL_LABEL["中"];
+      const sub = level === "高" ? "谨慎参考" : level === "中" ? "保持留意" : "相对安心";
+      verdictEl.className = "verdict-hero lv-" + (level === "高" ? "high" : level === "低" ? "low" : "mid");
+      verdictEl.innerHTML =
+        '<div class="vh-badge lv-' + (level === "高" ? "high" : level === "低" ? "low" : "mid") + '">' +
+          '<span class="vh-lv">' + escapeHtml(level) + '</span>' +
+          '<span class="vh-sub">' + escapeHtml(lv) + '</span>' +
+        '</div>' +
+        '<div class="vh-text">' +
+          '<div class="vh-title">营销话术风险：' + escapeHtml(lv) + '</div>' +
+          '<div class="vh-concl">' + escapeHtml(conclusion || "（未获取到一句话结论）") + '</div>' +
+        '</div>';
+    }
 
     function buildShareCard(summaryMd, detailMd) {
       const lvM = (summaryMd || "").match(/风险等级[：:]\s*(低|中|高)/);
       const level = lvM ? lvM[1] : "中";
       const cM = (summaryMd || "").match(/一句话结论[：:]\s*(.+)/);
       const conclusion = cM ? cM[1].trim() : "";
+
+      renderVerdict(level, conclusion);
 
       const hits = parseHits(detailMd);
       const hitList = Object.keys(hits).map(name => ({ name, level: hits[name].level }));
@@ -811,11 +943,11 @@
         else if (sec < 45) phase = "AI 正在逐句研判话术浓度，已等待 " + sec + " 秒…";
         else if (sec < 90) phase = "正在综合 7 个维度加权评分，已等待 " + sec + " 秒…";
         else phase = "分析仍在进行（内容较多），已等待 " + sec + " 秒…";
-        setStatus(phase);
+        setStatus(phase, false, true);
         showWaitingTips(sec);
         pollTimer = setTimeout(() => pollStatus(taskId), 1000);
       } catch (e) {
-        setStatus("网络波动，正在自动重试（" + e.message + "）", true);
+        setStatus("网络波动，正在自动重试（" + e.message + "）", true, true);
         showWaitingTips(Math.round((Date.now() - pollStartAt) / 1000));
         // 网络错误也纳入超时保护
         if (Date.now() - pollStartAt >= POLL_TIMEOUT_MS) {
@@ -843,11 +975,12 @@
       btn.disabled = true;
       btn.textContent = "检测中…";
       resultEl.style.display = "none";
+      verdictEl.innerHTML = "";
       shareWrap.style.display = "none";
       sharePlaceholder.style.display = "";
       if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
       hideWaitingTips();
-      setStatus("已提交，正在启动分析…");
+      setStatus("已提交，正在启动分析…", false, true);
       showWaitingTips(0);
 
       try {
