@@ -234,33 +234,8 @@
     .form-field textarea:focus { outline: none; border-color: var(--red); }
     .form-field textarea { resize: vertical; }
 
-    /* ===== P3 分享卡片 ===== */
+    /* ===== 复制检测结果（合规：不再生成带网址的分享图） ===== */
     .share-wrap { margin-top: 12px; display: none; }
-    .share-card {
-      background: linear-gradient(160deg, #ffffff 0%, #fff6f8 100%);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 22px 22px 16px;
-      box-shadow: 0 12px 32px rgba(255,46,77,.10);
-    }
-    .share-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-    .share-logo { font-weight: 700; font-size: 18px; color: var(--red); }
-    .share-sub { font-size: 12px; color: var(--gray); }
-    .share-level {
-      margin: 16px 0; padding: 14px 18px; border-radius: 14px; color: #fff;
-      display: flex; align-items: center; gap: 14px;
-    }
-    .share-level .big { font-size: 30px; font-weight: 800; line-height: 1; }
-    .share-level .lab { font-size: 15px; opacity: .95; }
-    .share-concl { font-size: 15px; color: var(--ink); line-height: 1.7; margin-bottom: 14px; white-space: pre-wrap; }
-    .share-dims-head { font-size: 13px; color: var(--gray); margin-bottom: 8px; }
-    .share-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid; background: #fff; }
-    .chip .lv { font-weight: 700; }
-    .share-foot {
-      margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--line);
-      font-size: 12px; color: var(--gray); display: flex; justify-content: space-between; gap: 8px;
-    }
     .share-actions { display: flex; gap: 10px; margin-top: 12px; }
     .share-actions button {
       flex: 1; padding: 11px; border-radius: 12px; font-size: 14px; cursor: pointer;
@@ -306,18 +281,16 @@
       </details>
     </div>
 
-    <div class="share-section-title">📤 分享检测结果</div>
+    <div class="share-section-title">📋 复制检测结果</div>
     <div id="share-placeholder" class="share-placeholder">
       <div class="ph-card">
         <div class="ph-icon">🌱</div>
-        <div class="ph-title">检测完成后，这里会生成分享卡片</div>
-        <div class="ph-desc">可保存图片或复制文字，把结果分享到小红书、朋友圈等平台。</div>
+        <div class="ph-title">检测完成后，可复制文字结果</div>
+        <div class="ph-desc">把纯文本结果粘贴到任意平台分享，也可自行截图保存。</div>
       </div>
     </div>
     <div id="share-wrap">
-      <div class="share-card" id="share-card"></div>
       <div class="share-actions">
-        <button id="btn-save-img">📸 保存分享图</button>
         <button id="btn-copy-text" class="ghost">📋 复制文字结果</button>
       </div>
     </div>
@@ -433,7 +406,6 @@
     const detailBody = document.getElementById("detail-body");
     const details = document.getElementById("details");
     const shareWrap = document.getElementById("share-wrap");
-    const shareCard = document.getElementById("share-card");
     const sharePlaceholder = document.getElementById("share-placeholder");
     const toastEl = document.getElementById("toast");
     let lastReport = null;
@@ -614,17 +586,17 @@
       detailBody.innerHTML = renderDimensions(detailMd);
       details.open = false;
 
-      // P3：生成分享卡片数据并渲染
+      // 解析分享数据（仅供"复制文字结果"使用，不再渲染带网址的分享卡片）
       buildShareCard(summaryMd, detailMd);
 
       resultEl.style.display = "block";
       sharePlaceholder.style.display = "none";
+      shareWrap.style.display = "block";
       resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    // P3：从摘要/评分依据解析出分享卡片所需字段并渲染
+    // 从摘要/评分依据解析出"复制文字结果"所需字段（合规要求：不再生成带本站网址的分享图片）
     const LEVEL_COLOR = { "高": "#ff2e4d", "中": "#f5a623", "低": "#2bb673" };
-    const SITE_HOST = location.host || "xhs-ad-detect.onrender.com";
 
     function buildShareCard(summaryMd, detailMd) {
       const lvM = (summaryMd || "").match(/风险等级[：:]\s*(低|中|高)/);
@@ -635,136 +607,11 @@
       const hits = parseHits(detailMd);
       const hitList = Object.keys(hits).map(name => ({ name, level: hits[name].level }));
 
+      // 仅保存数据供复制文本使用，不渲染任何带品牌/网址的卡片（避免生成可溯源的传播图片）
       lastReport = { level, conclusion, hits: hitList };
-
-      const color = LEVEL_COLOR[level] || LEVEL_COLOR["中"];
-      const chipsHtml = hitList.length
-        ? hitList.map(h => {
-            const info = LEVEL_MAP[h.level] || LEVEL_MAP["中"];
-            return '<span class="chip" style="border-color:' + color + ';color:' + color + '">' +
-                     escapeHtml(h.name) + ' <span class="lv">· ' + info.label + '</span></span>';
-          }).join("")
-        : '<span class="chip" style="border-color:var(--gray);color:var(--gray)">未命中明显话术维度</span>';
-
-      shareCard.innerHTML =
-        '<div class="share-top">' +
-          '<span class="share-logo">🌱 种草甄别</span>' +
-          '<span class="share-sub">小红书笔记话术检测</span>' +
-        '</div>' +
-        '<div class="share-level" style="background:' + color + '">' +
-          '<span class="big">' + level + '</span>' +
-          '<span class="lab">' + level + '风险 · 疑似营销话术浓度</span>' +
-        '</div>' +
-        '<div class="share-concl">' + (conclusion ? escapeHtml(conclusion) : '（未获取到一句话结论）') + '</div>' +
-        '<div class="share-dims-head">命中 ' + hitList.length + ' 个话术维度</div>' +
-        '<div class="share-chips">' + chipsHtml + '</div>' +
-        '<div class="share-foot"><span>' + escapeHtml(SITE_HOST) + '</span><span>AI 生成 · 仅供参考</span></div>';
-
-      shareWrap.style.display = "block";
     }
 
-    // P3：把分享卡片画成 PNG 下载（零依赖）
-    function wrapCn(ctx, text, maxWidth) {
-      const chars = Array.from(text || "");
-      const lines = []; let cur = "";
-      for (const ch of chars) {
-        if (cur && ctx.measureText(cur + ch).width > maxWidth) { lines.push(cur); cur = ch; }
-        else cur += ch;
-      }
-      if (cur) lines.push(cur);
-      return lines;
-    }
-
-    function roundRect(ctx, x, y, w, h, r) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
-    }
-
-    function saveShareImage() {
-      if (!lastReport) { showToast("请先检测生成结果，再保存分享图"); return; }
-      const W = 720, pad = 40, scale = 2;
-      const font = '"PingFang SC","Microsoft YaHei",sans-serif';
-      const c = document.createElement("canvas");
-      const ctx = c.getContext("2d");
-      ctx.font = '16px ' + font;
-
-      // 预排版，算高度
-      const color = LEVEL_COLOR[lastReport.level] || LEVEL_COLOR["中"];
-      const conclLines = wrapCn(ctx, lastReport.conclusion || "（未获取到一句话结论）", W - pad * 2);
-      const hitLines = [];
-      if (lastReport.hits.length) {
-        for (const h of lastReport.hits) {
-          const info = LEVEL_MAP[h.level] || LEVEL_MAP["中"];
-          hitLines.push("• " + h.name + "（" + info.label + "）");
-        }
-      } else {
-        hitLines.push("• 未命中明显话术维度");
-      }
-
-      const topH = 34, levelH = 70, conclGap = 22, conclLH = 26;
-      const dimsHeadH = 30, chipH = 26, footH = 40, gap = 16;
-      let H = pad * 2 + topH + levelH + conclGap + conclLines.length * conclLH
-              + dimsHeadH + hitLines.length * 24 + footH + gap * 4;
-
-      c.width = W * scale; c.height = H * scale;
-      ctx.scale(scale, scale);
-      ctx.textBaseline = "top";
-
-      // 背景
-      ctx.fillStyle = "#fff7f8";
-      roundRect(ctx, 0, 0, W, H, 18); ctx.fill();
-
-      let y = pad;
-      // 顶部
-      ctx.fillStyle = "#ff2e4d"; ctx.font = '700 18px ' + font;
-      ctx.fillText("🌱 种草甄别", pad, y);
-      ctx.fillStyle = "#8a8a8a"; ctx.font = '12px ' + font;
-      ctx.textAlign = "right"; ctx.fillText("小红书笔记话术检测", W - pad, y + 4); ctx.textAlign = "left";
-      y += topH;
-
-      // 等级徽章
-      ctx.fillStyle = color; roundRect(ctx, pad, y, W - pad * 2, levelH, 14); ctx.fill();
-      ctx.fillStyle = "#fff"; ctx.font = '800 30px ' + font;
-      ctx.fillText(lastReport.level, pad + 18, y + 16);
-      ctx.font = '15px ' + font;
-      ctx.fillText(lastReport.level + "风险 · 疑似营销话术浓度", pad + 58, y + 26);
-      y += levelH + conclGap;
-
-      // 结论
-      ctx.fillStyle = "#1f1f1f"; ctx.font = '15px ' + font;
-      for (const ln of conclLines) { ctx.fillText(ln, pad, y); y += conclLH; }
-      y += gap;
-
-      // 命中维度
-      ctx.fillStyle = "#8a8a8a"; ctx.font = '13px ' + font;
-      ctx.fillText("命中 " + lastReport.hits.length + " 个话术维度", pad, y); y += dimsHeadH;
-      ctx.font = '14px ' + font; ctx.fillStyle = "#1f1f1f";
-      for (const ln of hitLines) { ctx.fillText(ln, pad, y); y += 24; }
-      y += gap;
-
-      // 页脚
-      ctx.strokeStyle = "#ececec"; ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
-      y += 12;
-      ctx.fillStyle = "#8a8a8a"; ctx.font = '12px ' + font;
-      ctx.fillText(SITE_HOST, pad, y);
-      ctx.textAlign = "right"; ctx.fillText("AI 生成 · 仅供参考", W - pad, y); ctx.textAlign = "left";
-
-      c.toBlob(function (blob) {
-        if (!blob) { setStatus("生成图片失败，请改用「复制文字结果」或截图", true); return; }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url; a.download = "种草甄别卡片.png";
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-        setStatus("分享图已生成，可在相册/下载目录找到「种草甄别卡片.png」");
-      }, "image/png");
-    }
-
+    // 复制检测结果文字（纯文本，不含本站网址，避免传播可溯源内容）
     function copyShareText() {
       if (!lastReport) { showToast("请先检测生成结果，再复制文字结果"); return; }
       const dims = lastReport.hits.length
@@ -778,7 +625,7 @@
         "风险等级：" + lastReport.level + "风险\n" +
         "结论：" + (lastReport.conclusion || "（无）") + "\n" +
         "命中维度：" + dims + "\n" +
-        "—— AI 生成，仅供参考 · " + SITE_HOST;
+        "—— AI 生成，仅供参考";
       const done = function () { showToast("📋 已复制到剪贴板"); };
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(done, function () {
@@ -795,7 +642,6 @@
       ta.remove();
     }
 
-    document.getElementById("btn-save-img").addEventListener("click", saveShareImage);
     document.getElementById("btn-copy-text").addEventListener("click", copyShareText);
 
     let pollTimer = null;
